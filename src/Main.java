@@ -18,9 +18,12 @@ import javafx.scene.layout.Pane;
 import javafx.scene.Node;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
+import javafx.scene.image.Image;
+import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
 import javafx.event.EventHandler;
 import javafx.stage.Stage;
+import javafx.scene.image.ImageView;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -45,6 +48,9 @@ public class Main extends Application {
     private Pane root;
     private List<Node> cars = new ArrayList<>();
     private Node frog;
+    //private int frogSize = 39;
+    private int startPosition = HEIGHT - 39;
+
 
     private Parent createContent() {
         root = new Pane();
@@ -70,7 +76,7 @@ public class Main extends Application {
             car.setTranslateX(car.getTranslateX() + Math.random() * 10);
 
         // add a car
-        if (Math.random() < 0.075) {
+        if (Math.random() < 0.08) {
             cars.add(initCar());
         }
 
@@ -82,8 +88,9 @@ public class Main extends Application {
         for (Node car : cars) {
             if (car.getBoundsInParent().intersects(frog.getBoundsInParent())) {
                 // game over. reset frog
-                frog.setTranslateX(0);
-                frog.setTranslateY(600-39);
+                //frog.setTranslateX(0);
+                frog.setTranslateX((int)(WIDTH/2));
+                frog.setTranslateY(startPosition);
             }
         }
 
@@ -112,8 +119,12 @@ public class Main extends Application {
     }
 
     private Node initFrog() {
-        Rectangle rect = new Rectangle(38,38, Color.GREEN);
-        rect.setTranslateY(600 - 39);
+        Image image = new Image("./resources/assets/textures/frog.png");
+        Rectangle rect = new Rectangle(38,38, Color.TRANSPARENT);
+        rect.setTranslateY(startPosition);
+        rect.setTranslateX((int)(WIDTH/2));
+        ImagePattern imagePattern = new ImagePattern(image);
+        rect.setFill(imagePattern);
         return rect;
     }
 

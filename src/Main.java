@@ -1,31 +1,20 @@
 import javafx.animation.FadeTransition;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Font;
-import javafx.scene.text.FontPosture;
-import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
-import javafx.scene.layout.VBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.Node;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.image.Image;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
-import javafx.event.EventHandler;
 import javafx.stage.Stage;
-import javafx.scene.image.ImageView;
+import controllers.ScreenController;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.animation.AnimationTimer;
@@ -141,13 +130,22 @@ public class Main extends Application {
         window = primaryStage;
         window.setTitle("AWESOME GAME");
 
+
+
         Parent rootRegistration = FXMLLoader.load(getClass().getResource("resources/home.fxml"));
         rootScreen = new Scene(rootRegistration, WIDTH, HEIGHT);
+
+        ScreenController screenController = new ScreenController(rootScreen);
+        screenController.add("home", FXMLLoader.load(getClass().getResource( "./resources/home.fxml" )));
+        screenController.add("playground", FXMLLoader.load(getClass().getResource( "./resources/playground.fxml" )));
+        screenController.add("board", FXMLLoader.load(getClass().getResource( "./resources/board.fxml" )));
+        screenController.activate("home");
+
 
         Scene gameScreen = new Scene(createContent(), WIDTH, HEIGHT);
 
         // render registration scene
-        window.setScene(gameScreen);
+        window.setScene(rootScreen);
 
         window.getScene().setOnKeyPressed(event -> {
             double newPosition;

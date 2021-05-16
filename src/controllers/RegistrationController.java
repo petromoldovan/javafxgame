@@ -23,18 +23,18 @@ public class RegistrationController {
     }
 
     private void navigateToPlayground() throws Exception {
-//        Stage stage;
-//        Parent root;
-//
-//        stage = (Stage) submitBtn.getScene().getWindow();
-//        root = FXMLLoader.load(getClass().getResource("../resources/playground.fxml"));
-//
-//        Scene scene = new Scene(root);
-//        stage.setScene(scene);
-//        stage.show();
+        Stage stage;
+        Parent root;
+
+        stage = (Stage) submitBtn.getScene().getWindow();
+        root = FXMLLoader.load(getClass().getResource("../resources/playground.fxml"));
+
+        Scene scene = new Scene(root);
+        stage.setScene(scene);
+        stage.show();
 
 
-        ScreenController screenController = ScreenController.getInstance();
-        screenController.activate("playground");
+//        ScreenController screenController = ScreenController.getInstance();
+//        screenController.activate("playground");
     }
 }

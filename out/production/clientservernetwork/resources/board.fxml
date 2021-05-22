@@ -14,7 +14,7 @@
                 <Font name="Lato-Light" size="24.0" />
             </font>
         </Text>
-        <Button fx:id="submitBtn" layoutX="470.0" layoutY="325.0" mnemonicParsing="false" onAction="#handleButtonAction" text="Play again">
+        <Button layoutX="470.0" layoutY="325.0" mnemonicParsing="false" onAction="#handleButtonAction" text="Play again">
             <font>
                 <Font name="Lato Black" size="18.0" />
             </font>

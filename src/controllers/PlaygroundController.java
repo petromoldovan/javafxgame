@@ -2,6 +2,7 @@ package controllers;
 
 import javafx.animation.AnimationTimer;
 import javafx.animation.FadeTransition;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -24,5 +25,13 @@ import java.util.List;
 import javafx.scene.control.TextField;
 
 public class PlaygroundController {
+    @FXML
+    private void handleButtonAction (ActionEvent event) throws Exception {
+        next();
+    }
 
+    private void next() throws Exception {
+        ScreenController screenController = ScreenController.getInstance();
+        screenController.activate("board");
+    }
 }

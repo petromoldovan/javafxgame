@@ -133,44 +133,44 @@ public class Main extends Application {
         Parent rootRegistration = FXMLLoader.load(getClass().getResource("resources/home.fxml"));
         rootScreen = new Scene(rootRegistration, WIDTH, HEIGHT);
 
-//        ScreenController screenController = new ScreenController(rootScreen);
-//        screenController.add("home", FXMLLoader.load(getClass().getResource( "./resources/home.fxml" )));
-//        screenController.add("playground", FXMLLoader.load(getClass().getResource( "./resources/playground.fxml" )));
-//        screenController.add("board", FXMLLoader.load(getClass().getResource( "./resources/board.fxml" )));
-//        screenController.activate("home");
+        ScreenController screenController = new ScreenController(rootScreen);
+        screenController.add("home", FXMLLoader.load(getClass().getResource( "./resources/home.fxml" )));
+        screenController.add("playground", FXMLLoader.load(getClass().getResource( "./resources/playground.fxml" )));
+        screenController.add("board", FXMLLoader.load(getClass().getResource( "./resources/board.fxml" )));
+        screenController.activate("home");
 
 
-        Scene gameScreen = new Scene(createContent(), WIDTH, HEIGHT);
+        //Scene gameScreen = new Scene(createContent(), WIDTH, HEIGHT);
 
         // render registration scene
-        window.setScene(gameScreen);
+        window.setScene(rootScreen);
 
-        window.getScene().setOnKeyPressed(event -> {
-            double newPosition;
-            switch (event.getCode()) {
-                case W:
-                    frog.setTranslateY(frog.getTranslateY() - 40);
-                    break;
-                case S:
-                    newPosition = frog.getTranslateY() + 40;
-                    if (newPosition > HEIGHT) return;
-                    frog.setTranslateY(newPosition);
-                    break;
-                case A:
-                    newPosition = frog.getTranslateX() - 40;
-                    if (newPosition < 0) return;
-                    frog.setTranslateX(newPosition);
-
-                    break;
-                case D:
-                    newPosition = frog.getTranslateX() + 40;
-                    if (newPosition >= WIDTH) return;
-                    frog.setTranslateX(newPosition);
-                    break;
-                default:
-                    break;
-            }
-        });
+//        window.getScene().setOnKeyPressed(event -> {
+//            double newPosition;
+//            switch (event.getCode()) {
+//                case W:
+//                    frog.setTranslateY(frog.getTranslateY() - 40);
+//                    break;
+//                case S:
+//                    newPosition = frog.getTranslateY() + 40;
+//                    if (newPosition > HEIGHT) return;
+//                    frog.setTranslateY(newPosition);
+//                    break;
+//                case A:
+//                    newPosition = frog.getTranslateX() - 40;
+//                    if (newPosition < 0) return;
+//                    frog.setTranslateX(newPosition);
+//
+//                    break;
+//                case D:
+//                    newPosition = frog.getTranslateX() + 40;
+//                    if (newPosition >= WIDTH) return;
+//                    frog.setTranslateX(newPosition);
+//                    break;
+//                default:
+//                    break;
+//            }
+//        });
 
         window.show();
     }

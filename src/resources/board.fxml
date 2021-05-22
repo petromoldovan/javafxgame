@@ -7,6 +7,17 @@
 <?import javafx.scene.text.Text?>
 
 
-<AnchorPane prefHeight="600.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.RegistrationController">
-
+<AnchorPane prefHeight="600.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.BoardController">
+    <children>
+        <Text layoutX="219.0" layoutY="68.0" strokeType="OUTSIDE" strokeWidth="0.0" text="BOARD">
+            <font>
+                <Font name="Lato-Light" size="24.0" />
+            </font>
+        </Text>
+        <Button layoutX="470.0" layoutY="325.0" mnemonicParsing="false" onAction="#handleButtonAction" text="Play again">
+            <font>
+                <Font name="Lato Black" size="18.0" />
+            </font>
+        </Button>
+    </children>
 </AnchorPane>

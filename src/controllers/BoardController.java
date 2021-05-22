@@ -2,12 +2,8 @@ package controllers;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
 
-public class RegistrationController {
-    @FXML
-    private Button submitBtn;
-
+public class BoardController {
     @FXML
     private void handleButtonAction (ActionEvent event) throws Exception {
         next();

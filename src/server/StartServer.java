@@ -19,7 +19,7 @@ public class StartServer {
 
     public StartServer () {
         try {
-            int PORT = 8888;
+            int PORT = 5656;
 
             // create server
             serverSocket = new ServerSocket(PORT);

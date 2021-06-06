@@ -6,7 +6,6 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-
 <AnchorPane prefHeight="600.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.RegistrationController">
    <children>
       <Button fx:id="submitBtn" layoutX="470.0" layoutY="325.0" mnemonicParsing="false" onAction="#handleButtonAction" text="Continue">
@@ -24,7 +23,12 @@
             <Font name="Lato-Light" size="18.0" />
          </font>
       </Text>
-      <TextField layoutX="150.0" layoutY="143.0" prefHeight="26.0" prefWidth="309.0">
+      <TextField fx:id="usernameField" layoutX="150.0" layoutY="143.0" prefHeight="26.0" prefWidth="309.0" text="Sam">
+         <font>
+            <Font name="Lato-Light" size="18.0" />
+         </font>
+      </TextField>
+      <TextField fx:id="passwordField" layoutX="150.0" layoutY="220.0" prefHeight="26.0" prefWidth="309.0" text="12345678">
          <font>
             <Font name="Lato-Light" size="18.0" />
          </font>

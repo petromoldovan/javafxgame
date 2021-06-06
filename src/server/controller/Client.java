@@ -25,7 +25,7 @@ public class Client implements Runnable {
             try {
                 // read request from the client
                 String data = dataInputStream.readUTF();
-
+                System.out.println("GOT DATA!!!" + data);
             } catch (IOException e) {
                 System.out.println("ERROR: Client#run" + e.getMessage());
                 break;

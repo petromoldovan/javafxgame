@@ -45,5 +45,20 @@ public class SocketManager {
             }
         }
     }
-    
+
+    private void sendDataToServer(String data) {
+        try {
+            dataOutputStream.writeUTF(data);
+        } catch (IOException e) {
+            System.out.println("ERROR: SocketHandler#sendDataToServer " + e.getMessage());
+        }
+    }
+
+    public void login(String username, String password) {
+        String payload = username + ";" + password;
+
+        System.out.println("sending payload " + payload);
+
+        sendDataToServer(payload);
+    }
 }

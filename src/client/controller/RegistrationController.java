@@ -9,12 +9,12 @@ public class RegistrationController {
     private Button submitBtn;
 
     @FXML
-    private void handleButtonAction (ActionEvent event) throws Exception {
+    private void handleButtonAction (ActionEvent event) {
         next();
     }
 
-    private void next() throws Exception {
+    private void next() {
         ScreenController screenController = ScreenController.getInstance();
-        screenController.activate("playground");
+        screenController.activate("playgroundScreen");
     }
 }

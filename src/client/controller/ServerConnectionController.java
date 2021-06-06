@@ -39,7 +39,26 @@ public class ServerConnectionController {
         System.out.println("port" + port);
         System.out.println("host " + host);
 
-        // connect to server
-        StartClient.socketManager.connect(host, port);
+        // try to connect to server
+        connectToServer(host, port);
+    }
+
+    private void connectToServer(String host, int port) {
+        new Thread(() -> {
+           System.out.println("trying to connect...");
+
+           if (StartClient.socketManager.connect(host, port)) {
+               System.out.println("SUCCESS");
+               next();
+           } else {
+               System.out.println("FAILURE");
+           }
+        })
+        .start();
+    }
+
+    private void next() {
+        ScreenController screenController = ScreenController.getInstance();
+        screenController.activate("registrationScreen");
     }
 }

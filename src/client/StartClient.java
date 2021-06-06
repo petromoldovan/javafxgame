@@ -26,17 +26,17 @@ public class StartClient extends Application {
         socketManager = new SocketManager();
 
         window = primaryStage;
-        window.setTitle("AWESOME GAME");
+        window.setTitle("FROGGER GAME");
 
         Parent rootRegistration = FXMLLoader.load(getClass().getResource("/client/resources/home.fxml"));
         rootScreen = new Scene(rootRegistration, WIDTH, HEIGHT);
 
         ScreenController screenController = new ScreenController(rootScreen);
-        screenController.add("serverConnection", FXMLLoader.load(getClass().getResource("/client/resources/serverConnection.fxml")));
-        screenController.add("home", FXMLLoader.load(getClass().getResource("/client/resources/home.fxml")));
-        screenController.add("playground", FXMLLoader.load(getClass().getResource("/client/resources/playground.fxml")));
-        screenController.add("board", FXMLLoader.load(getClass().getResource("/client/resources/board.fxml")));
-        screenController.activate("serverConnection");
+        screenController.add("serverConnectionScreen", FXMLLoader.load(getClass().getResource("/client/resources/serverConnection.fxml")));
+        screenController.add("registrationScreen", FXMLLoader.load(getClass().getResource("/client/resources/home.fxml")));
+        screenController.add("playgroundScreen", FXMLLoader.load(getClass().getResource("/client/resources/playground.fxml")));
+        screenController.add("boardScreen", FXMLLoader.load(getClass().getResource("/client/resources/board.fxml")));
+        screenController.activate("serverConnectionScreen");
 
         // render registration scene
         window.setScene(rootScreen);

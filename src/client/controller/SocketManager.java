@@ -9,17 +9,41 @@ import java.net.Socket;
 
 public class SocketManager {
     Socket socket;
+    DataInputStream dataInputStream;
+    DataOutputStream dataOutputStream;
+    Thread listener = null;
 
-    public void connect(String host, int port) {
+    public boolean connect(String host, int port) {
         try {
             socket = new Socket();
             socket.connect(new InetSocketAddress(host, port), 2000);
 
             System.out.println("Connected to server " + host + ":" + port);
 
+            dataInputStream = new DataInputStream(socket.getInputStream());
+            dataOutputStream = new DataOutputStream(socket.getOutputStream());
 
+            listener = new Thread(this::readDataFromServer);
+            listener.start();
+            return true;
         } catch (IOException e) {
             System.out.println("ERROR: SocketHandler#connect " + e.getMessage());
+            return false;
         }
     }
+
+    public void readDataFromServer() {
+        boolean isRunning = true;
+
+        while(isRunning) {
+            try {
+                String data = dataInputStream.readUTF();
+
+                System.out.println("data" + data);
+            } catch (IOException e) {
+                System.out.println("ERROR: SocketHandler#readDataFromServer " + e.getMessage());
+            }
+        }
+    }
+    
 }

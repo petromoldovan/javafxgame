@@ -1,9 +1,11 @@
 package client.controller;
 
+import client.StartClient;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.TextField;
+import server.StartServer;
 
 public class ServerConnectionController {
     public TextField hostField;
@@ -38,5 +40,6 @@ public class ServerConnectionController {
         System.out.println("host " + host);
 
         // connect to server
+        StartClient.socketManager.connect(host, port);
     }
 }

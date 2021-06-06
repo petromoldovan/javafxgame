@@ -1,6 +1,7 @@
 package client;
 
 import client.controller.ScreenController;
+import client.controller.SocketManager;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -14,12 +15,16 @@ public class StartClient extends Application {
     int WIDTH = 800;
     int HEIGHT = 600;
 
+    public static SocketManager socketManager;
+
     public static void main(String[] args) {
         launch(args);
     }
 
     @Override
     public void start(Stage primaryStage) throws Exception{
+        socketManager = new SocketManager();
+
         window = primaryStage;
         window.setTitle("AWESOME GAME");
 

@@ -27,9 +27,20 @@ public class Client implements Runnable {
                 String data = dataInputStream.readUTF();
 
             } catch (IOException e) {
-                System.out.println("ERROR: StartServer#" + e.getMessage());
+                System.out.println("ERROR: Client#run" + e.getMessage());
                 break;
             }
+        }
+    }
+
+    public String sendData(String data) {
+        try {
+            // TODO: encrypt data?
+            this.dataOutputStream.writeUTF(data);
+            return "SUCCESS";
+        } catch (IOException e) {
+            System.out.println("ERROR: Client#sendData" + e.getMessage());
+            return "FAILURE";
         }
     }
 }

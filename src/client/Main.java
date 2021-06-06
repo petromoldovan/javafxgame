@@ -1,0 +1,41 @@
+package client;
+
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+import client.controller.ScreenController;
+
+
+public class Main extends Application {
+    Stage window;
+    Scene rootScreen;
+
+    int WIDTH = 800;
+    int HEIGHT = 600;
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+
+    @Override
+    public void start(Stage primaryStage) throws Exception{
+        window = primaryStage;
+        window.setTitle("AWESOME GAME");
+
+        Parent rootRegistration = FXMLLoader.load(getClass().getResource("client/resources/home.fxml"));
+        rootScreen = new Scene(rootRegistration, WIDTH, HEIGHT);
+
+        ScreenController screenController = new ScreenController(rootScreen);
+        screenController.add("home", FXMLLoader.load(getClass().getResource("client/resources/home.fxml")));
+        screenController.add("playground", FXMLLoader.load(getClass().getResource("client/resources/playground.fxml")));
+        screenController.add("board", FXMLLoader.load(getClass().getResource("client/resources/board.fxml")));
+        screenController.activate("home");
+
+        // render registration scene
+        window.setScene(rootScreen);
+
+        window.show();
+    }
+}

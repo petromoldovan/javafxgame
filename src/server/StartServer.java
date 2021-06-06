@@ -1,7 +1,5 @@
 package server;
 
-import com.sun.deploy.util.SessionState;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -14,6 +12,10 @@ import server.controller.ClientManager;
 public class StartServer {
     public static ServerSocket serverSocket;
     public static boolean isServerRunning = true;
+
+    public static void main(String[] args) {
+        new StartServer();
+    }
 
     public StartServer () {
         try {

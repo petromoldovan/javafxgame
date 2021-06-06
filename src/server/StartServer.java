@@ -11,6 +11,7 @@ import server.controller.ClientManager;
 
 public class StartServer {
     public static ServerSocket serverSocket;
+    public static ClientManager clientManager;
     public static boolean isServerRunning = true;
 
     public static void main(String[] args) {
@@ -26,14 +27,14 @@ public class StartServer {
             System.out.println("Server is listening on port: " + PORT);
 
             // init manager
-            ClientManager clientManager = new ClientManager();
+            clientManager = new ClientManager();
 
             ThreadPoolExecutor executor = new ThreadPoolExecutor(
-                    1,
-                    1,
-                    1,
+                    10,
+                    10,
+                    10,
                     TimeUnit.SECONDS,
-                    new ArrayBlockingQueue<>(1)
+                    new ArrayBlockingQueue<>(10)
             );
 
             // main loop

@@ -1,5 +1,7 @@
 package client.controller;
 
+import common.constants.ActionTypes;
+
 import javax.imageio.IIOException;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -37,9 +39,10 @@ public class SocketManager {
 
         while(isRunning) {
             try {
-                String data = dataInputStream.readUTF();
+                String messageFromServer = dataInputStream.readUTF();
+                System.out.println("messageFromServer" + messageFromServer);
 
-                System.out.println("data" + data);
+                // TODO: logic based on type
             } catch (IOException e) {
                 System.out.println("ERROR: SocketHandler#readDataFromServer " + e.getMessage());
             }
@@ -55,10 +58,7 @@ public class SocketManager {
     }
 
     public void login(String username, String password) {
-        String payload = username + ";" + password;
-
-        System.out.println("sending payload " + payload);
-
+        String payload = ActionTypes.ActionType.LOGIN_USER + ";" + username + ";" + password;
         sendDataToServer(payload);
     }
 }

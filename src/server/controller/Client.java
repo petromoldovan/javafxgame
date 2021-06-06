@@ -1,5 +1,6 @@
 package server.controller;
 
+import common.constants.ActionTypes;
 import server.StartServer;
 
 import java.io.DataInput;
@@ -24,8 +25,23 @@ public class Client implements Runnable {
         while (StartServer.isServerRunning) {
             try {
                 // read request from the client
-                String data = dataInputStream.readUTF();
-                System.out.println("GOT DATA!!!" + data);
+                String messageFromClient = dataInputStream.readUTF();
+                System.out.println("GOT DATA!!!" + messageFromClient);
+                ActionTypes.ActionType type = ActionTypes.getActionTypeFromMessage(messageFromClient);
+
+                System.out.println("GOT messsage type!!!" + type);
+
+                switch (type) {
+                    case LOGIN_USER:
+                        onLoginUser(messageFromClient);
+                        break;
+                    case INVALID:
+                        System.out.println("ERROR: invalid type");
+                        break;
+                    default:
+                        System.out.println("ERROR: unknown type");
+                }
+
             } catch (IOException e) {
                 System.out.println("ERROR: Client#run" + e.getMessage());
                 break;
@@ -33,7 +49,7 @@ public class Client implements Runnable {
         }
     }
 
-    public String sendData(String data) {
+    public String sendDataToClient(String data) {
         try {
             // TODO: encrypt data?
             this.dataOutputStream.writeUTF(data);
@@ -42,5 +58,16 @@ public class Client implements Runnable {
             System.out.println("ERROR: Client#sendData" + e.getMessage());
             return "FAILURE";
         }
+    }
+
+    private void onLoginUser(String message) {
+        String[] splitted = message.split(";");
+        String email = splitted[1];
+
+        // TODO: login check
+
+        // send user data to
+        sendDataToClient(ActionTypes.ActionType.LOGIN_USER.name() + ";" + ActionTypes.Code.SUCCESS.name() + ";" + email);
+
     }
 }

@@ -12,9 +12,10 @@ public class DashboardController {
     public void showProfile(ActionEvent actionEvent) {
     }
 
-    public void startSinglegame(ActionEvent actionEvent) {
+    public void startSinglegame(ActionEvent actionEvent) throws Exception {
         ScreenController screenController = ScreenController.getInstance();
-        screenController.activate("boardScreen");
+        screenController.activate("playgroundScreen");
+        PlaygroundController.startGame();
     }
 
     public void startMultiplayer(ActionEvent actionEvent) {

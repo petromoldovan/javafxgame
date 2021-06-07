@@ -9,7 +9,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class StartClient extends Application {
-    Stage window;
+    public static Stage window;
     Scene rootScreen;
 
     int WIDTH = 800;

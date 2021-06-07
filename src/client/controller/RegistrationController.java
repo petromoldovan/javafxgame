@@ -9,6 +9,7 @@ import javafx.scene.control.TextField;
 public class RegistrationController {
     public TextField passwordField;
     public TextField usernameField;
+
     @FXML
     private Button submitBtn;
 

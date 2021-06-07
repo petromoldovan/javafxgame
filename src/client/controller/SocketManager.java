@@ -1,5 +1,6 @@
 package client.controller;
 
+import client.StartClient;
 import common.constants.ActionTypes;
 
 import javax.imageio.IIOException;
@@ -42,7 +43,19 @@ public class SocketManager {
                 String messageFromServer = dataInputStream.readUTF();
                 System.out.println("messageFromServer" + messageFromServer);
 
-                // TODO: logic based on type
+                // parse type
+                ActionTypes.ActionType type = ActionTypes.getActionTypeFromMessage(messageFromServer);
+
+                switch (type) {
+                    case LOGIN_USER:
+                        onLoginUserResponse(messageFromServer);
+                        break;
+                    case INVALID:
+                        System.out.println("ERROR: invalid type");
+                        break;
+                    default:
+                        System.out.println("ERROR: unknown type");
+                }
             } catch (IOException e) {
                 System.out.println("ERROR: SocketHandler#readDataFromServer " + e.getMessage());
             }
@@ -57,8 +70,26 @@ public class SocketManager {
         }
     }
 
+    // Requests to server
+
     public void login(String username, String password) {
         String payload = ActionTypes.ActionType.LOGIN_USER + ";" + username + ";" + password;
         sendDataToServer(payload);
+    }
+
+    // Responses from server
+
+    private void onLoginUserResponse(String message) {
+        String[] splitted = message.split(";");
+        String status = splitted[1];
+
+        System.out.println("status " + status);
+
+        if (status.equalsIgnoreCase(ActionTypes.Code.SUCCESS.name())) {
+            ScreenController screenController = ScreenController.getInstance();
+            screenController.activate("dashboardScreen");
+        } else {
+            System.out.println("ERROR: onLoginUserResponse# login fail");
+        }
     }
 }

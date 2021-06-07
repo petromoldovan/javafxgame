@@ -68,6 +68,5 @@ public class Client implements Runnable {
 
         // send user data to
         sendDataToClient(ActionTypes.ActionType.LOGIN_USER.name() + ";" + ActionTypes.Code.SUCCESS.name() + ";" + email);
-
     }
 }

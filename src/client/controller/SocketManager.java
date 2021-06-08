@@ -1,6 +1,7 @@
 package client.controller;
 
 import client.StartClient;
+import com.sun.xml.internal.xsom.impl.scd.Step;
 import common.constants.ActionTypes;
 
 import javax.imageio.IIOException;
@@ -50,6 +51,12 @@ public class SocketManager {
                     case LOGIN_USER:
                         onLoginUserResponse(messageFromServer);
                         break;
+                    case FIND_MATCH:
+                        onFindMatchResponse(messageFromServer);
+                        break;
+                    case GET_MULTIPLAYER_MATCH_INFO:
+                        onGetMultiplayerMatchInfoResponse(messageFromServer);
+                        break;
                     case INVALID:
                         System.out.println("ERROR: invalid type");
                         break;
@@ -77,19 +84,48 @@ public class SocketManager {
         sendDataToServer(payload);
     }
 
+    public void findMatch() {
+        String payload = ActionTypes.ActionType.FIND_MATCH + ";";
+        sendDataToServer(payload);
+    }
+
     // Responses from server
 
     private void onLoginUserResponse(String message) {
         String[] splitted = message.split(";");
         String status = splitted[1];
 
-        System.out.println("status " + status);
-
         if (status.equalsIgnoreCase(ActionTypes.Code.SUCCESS.name())) {
             ScreenController screenController = ScreenController.getInstance();
             screenController.activate("dashboardScreen");
         } else {
             System.out.println("ERROR: onLoginUserResponse# login fail");
+        }
+    }
+
+    private void onFindMatchResponse(String message) {
+        String[] splitted = message.split(";");
+        String status = splitted[1];
+
+        if (status.equalsIgnoreCase(ActionTypes.Code.SUCCESS.name())) {
+            // TODO: show message that you are queued up for the match
+            System.out.println("waiting...");
+        } else {
+            System.out.println("ERROR: onFindMatchResponse# smth is wrong");
+        }
+    }
+
+    private void onGetMultiplayerMatchInfoResponse(String message) {
+        String[] splitted = message.split(";");
+        String status = splitted[1];
+
+        if (status.equalsIgnoreCase(ActionTypes.Code.SUCCESS.name())) {
+            System.out.println("got opponent! " + splitted[2]);
+
+
+
+        } else {
+            System.out.println("ERROR: onGetMultiplayerMatchInfoResponse# smth is wrong");
         }
     }
 }

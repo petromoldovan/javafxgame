@@ -19,5 +19,6 @@ public class DashboardController {
     }
 
     public void startMultiplayer(ActionEvent actionEvent) {
+        StartClient.socketManager.findMatch();
     }
 }

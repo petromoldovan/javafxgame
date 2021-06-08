@@ -14,6 +14,9 @@ public class Client implements Runnable {
     DataInputStream dataInputStream;
     DataOutputStream dataOutputStream;
 
+    private boolean isLookingForMatch = false;
+    private String clientID = "";
+
     public Client(Socket socket) throws IOException {
         this.socket = socket;
         this.dataInputStream = new DataInputStream(socket.getInputStream());
@@ -34,6 +37,9 @@ public class Client implements Runnable {
                 switch (type) {
                     case LOGIN_USER:
                         onLoginUser(messageFromClient);
+                        break;
+                    case FIND_MATCH:
+                        onFindMatchRequest();
                         break;
                     case INVALID:
                         System.out.println("ERROR: invalid type");
@@ -66,7 +72,39 @@ public class Client implements Runnable {
 
         // TODO: login check
 
+        // save user id
+        this.clientID = email;
+
         // send user data to
         sendDataToClient(ActionTypes.ActionType.LOGIN_USER.name() + ";" + ActionTypes.Code.SUCCESS.name() + ";" + email);
+    }
+
+    private void onFindMatchRequest() {
+        Client opponent = StartServer.clientManager.findOpponent();
+
+        if (opponent == null) {
+            // case: nobody is looking for a game.
+            // Present yourself as the one that is looking for the game and wait.
+            this.isLookingForMatch = true;
+            sendDataToClient(ActionTypes.ActionType.FIND_MATCH.name() + ";" + ActionTypes.Code.SUCCESS.name());
+        } else {
+            // case: opponent found
+
+            // both are not looking for match any longer
+            opponent.isLookingForMatch = false;
+            this.isLookingForMatch = false;
+
+            // communicate match data to the participating client
+            this.sendDataToClient(ActionTypes.ActionType.GET_MULTIPLAYER_MATCH_INFO.name() + ";" + ActionTypes.Code.SUCCESS.name() + ";" + opponent.getID());
+            opponent.sendDataToClient(ActionTypes.ActionType.GET_MULTIPLAYER_MATCH_INFO.name() + ";" + ActionTypes.Code.SUCCESS.name() + ";" + this.getID());
+        }
+    }
+
+    public boolean isLookingForMatch() {
+        return this.isLookingForMatch;
+    }
+
+    public String getID() {
+        return this.clientID;
     }
 }

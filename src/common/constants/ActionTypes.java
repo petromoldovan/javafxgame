@@ -9,6 +9,8 @@ public class ActionTypes {
     public enum ActionType {
         INVALID,
         LOGIN_USER,
+        FIND_MATCH,
+        GET_MULTIPLAYER_MATCH_INFO
     }
 
     public static ActionType getActionTypeFromMessage(String message) {

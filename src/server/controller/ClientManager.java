@@ -15,6 +15,16 @@ public class ClientManager {
         }
     }
 
+    public Client findOpponent() {
+        for (Client c : allConnectedClients) {
+            if (c.isLookingForMatch()) {
+                return c;
+            }
+        }
+
+        return null;
+    }
+
 //    public void broadCastToAllClients() {
 //        for (Client c : allConnectedClients) {
 //

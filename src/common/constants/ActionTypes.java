@@ -10,8 +10,10 @@ public class ActionTypes {
         INVALID,
         LOGIN_USER,
         FIND_MATCH,
-        GET_MULTIPLAYER_MATCH_INFO,
-        JOIN_ROOM
+        JOIN_ROOM,
+        GET_DATA_FOR_ROOM_REQUEST,
+        GET_DATA_FOR_ROOM_RESPONSE,
+        CURRENT_GAME_DATA_RESPONSE,
     }
 
     public static ActionType getActionTypeFromMessage(String message) {

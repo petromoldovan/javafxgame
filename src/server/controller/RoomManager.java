@@ -16,4 +16,12 @@ public class RoomManager {
         return room;
     }
 
+    public Room findRoomByID(String id) {
+        for (Room room : allRooms) {
+            if (room.getID().equals(id)) {
+                return room;
+            }
+        }
+        return null;
+    }
 }

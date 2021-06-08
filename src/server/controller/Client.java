@@ -8,6 +8,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.UUID;
 
 public class Client implements Runnable {
     Socket socket;
@@ -16,11 +17,13 @@ public class Client implements Runnable {
 
     private boolean isLookingForMatch = false;
     private String clientID = "";
+    private String username = "";
 
     public Client(Socket socket) throws IOException {
         this.socket = socket;
         this.dataInputStream = new DataInputStream(socket.getInputStream());
         this.dataOutputStream = new DataOutputStream(socket.getOutputStream());
+        this.clientID = UUID.randomUUID().toString();
     }
 
     @Override
@@ -29,10 +32,7 @@ public class Client implements Runnable {
             try {
                 // read request from the client
                 String messageFromClient = dataInputStream.readUTF();
-                System.out.println("GOT DATA!!!" + messageFromClient);
                 ActionTypes.ActionType type = ActionTypes.getActionTypeFromMessage(messageFromClient);
-
-                System.out.println("GOT messsage type!!!" + type);
 
                 switch (type) {
                     case LOGIN_USER:
@@ -41,11 +41,14 @@ public class Client implements Runnable {
                     case FIND_MATCH:
                         onFindMatchRequest();
                         break;
+                    case GET_DATA_FOR_ROOM_REQUEST:
+                        onGetDataForRoom(messageFromClient);
+                        break;
                     case INVALID:
-                        System.out.println("ERROR: invalid type");
+                        System.out.println("ERROR: invalid type " + type);
                         break;
                     default:
-                        System.out.println("ERROR: unknown type");
+                        System.out.println("ERROR: unknown type " + type);
                 }
 
             } catch (IOException e) {
@@ -68,15 +71,15 @@ public class Client implements Runnable {
 
     private void onLoginUser(String message) {
         String[] splitted = message.split(";");
-        String email = splitted[1];
+        String username = splitted[1];
 
         // TODO: login check
 
         // save user id
-        this.clientID = email;
+        this.username = username;
 
         // send user data to
-        sendDataToClient(ActionTypes.ActionType.LOGIN_USER.name() + ";" + ActionTypes.Code.SUCCESS.name() + ";" + email);
+        sendDataToClient(ActionTypes.ActionType.LOGIN_USER.name() + ";" + ActionTypes.Code.SUCCESS.name() + ";" + username);
     }
 
     private void onFindMatchRequest() {
@@ -94,10 +97,6 @@ public class Client implements Runnable {
             opponent.isLookingForMatch = false;
             this.isLookingForMatch = false;
 
-            // communicate match data to the participating client
-//            this.sendDataToClient(ActionTypes.ActionType.GET_MULTIPLAYER_MATCH_INFO.name() + ";" + ActionTypes.Code.SUCCESS.name() + ";" + opponent.getID());
-//            opponent.sendDataToClient(ActionTypes.ActionType.GET_MULTIPLAYER_MATCH_INFO.name() + ";" + ActionTypes.Code.SUCCESS.name() + ";" + this.getID());
-
             Room room = StartServer.roomManager.newRoom();
             // add clients to the new room
             room.addClient(this);
@@ -109,11 +108,36 @@ public class Client implements Runnable {
         }
     }
 
+    private void onGetDataForRoom(String message) {
+        String[] splitted = message.split(";");
+        String roomID = splitted[1];
+
+        Room room = StartServer.roomManager.findRoomByID(roomID);
+        if (room == null) {
+            System.out.println("onGetDataForRoom#no room with id " + roomID);
+            return;
+        }
+
+        sendDataToClient(ActionTypes.ActionType.GET_DATA_FOR_ROOM_RESPONSE.name() + ";" + room.getData());
+        room.startGame();
+    }
+
     public boolean isLookingForMatch() {
         return this.isLookingForMatch;
     }
 
     public String getID() {
         return this.clientID;
+    }
+    public String getUsername() {
+        return this.username;
+    }
+
+    public String getClientData() {
+        return getID() + ";" + getUsername();
+    }
+
+    public String getEmptyClientData() {
+        return ";";
     }
 }

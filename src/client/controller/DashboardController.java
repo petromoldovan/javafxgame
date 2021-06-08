@@ -13,9 +13,13 @@ public class DashboardController {
     }
 
     public void startSinglegame(ActionEvent actionEvent) throws Exception {
-        ScreenController screenController = ScreenController.getInstance();
-        screenController.activate("playgroundScreen");
-        PlaygroundController.startGame();
+//        ScreenController screenController = ScreenController.getInstance();
+//        screenController.activate("playgroundScreen");
+//        PlaygroundController.startGame();
+        StartClient.gameScreenController.show();
+        StartClient.gameScreenController.setTimeLeft(60);
+        StartClient.gameScreenController.startGame();
+        StartClient.gameScreenController.setTimeLeft(59);
     }
 
     public void startMultiplayer(ActionEvent actionEvent) {

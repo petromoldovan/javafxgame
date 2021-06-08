@@ -4,6 +4,7 @@ import client.StartClient;
 import client.model.Player;
 import com.sun.xml.internal.xsom.impl.scd.Step;
 import common.constants.ActionTypes;
+import javafx.application.Platform;
 
 import javax.imageio.IIOException;
 import java.io.DataInputStream;
@@ -44,7 +45,6 @@ public class SocketManager {
         while(isRunning) {
             try {
                 String messageFromServer = dataInputStream.readUTF();
-                System.out.println("messageFromServer" + messageFromServer);
 
                 // parse type
                 ActionTypes.ActionType type = ActionTypes.getActionTypeFromMessage(messageFromServer);
@@ -141,14 +141,15 @@ public class SocketManager {
             // retrieve data for the room
             getDataForTheRoomRequest(this.roomID);
 
+
             // Set players
 //            Player p1 = new Player(splitted[2]);
 //            PlaygroundController.setPlayers(p1, null);
-//            try {
-//                PlaygroundController.startGame();
-//            } catch (Exception e) {
-//                System.out.println("ERROR: onGetMultiplayerMatchInfoResponse#" + e.getMessage());
-//            }
+            try {
+                PlaygroundController.startGame();
+            } catch (Exception e) {
+                System.out.println("ERROR: onGetMultiplayerMatchInfoResponse#" + e.getMessage());
+            }
 
         } else {
             System.out.println("ERROR: onGetMultiplayerMatchInfoResponse# smth is wrong");
@@ -157,10 +158,40 @@ public class SocketManager {
 
     private String onGetDataForRoomResponse(String message) {
         System.out.println("onGetDataForRoomResponse message " + message);
+
+
+        // Avoid throwing IllegalStateException by running from a non-JavaFX thread.
+        Platform.runLater(
+                () -> {
+                    try {
+                        StartClient.gameScreenController.show();
+                        StartClient.gameScreenController.setTimeLeft(60);
+                        StartClient.gameScreenController.startGame();
+                    } catch (Exception e) {
+                        System.out.println("onGetDataForRoomResponse# " + e.getMessage());
+                    }
+                }
+        );
+
         return message;
     }
 
     private String onCurrentGameDataResponse(String message) {
+        String[] splitted = message.split(";");
+        int timeLeft = Integer.parseInt(splitted[5]);
+
+        Platform.runLater(
+                () -> {
+                    try {
+                        StartClient.gameScreenController.setTimeLeft(timeLeft);
+                    } catch (Exception e) {
+                        System.out.println("onGetDataForRoomResponse# " + e.getMessage());
+                    }
+                }
+        );
+
+
+        System.out.println("splitted.length " + splitted[5]);
         System.out.println("onCurrentGameDataResponse message " + message);
         return message;
     }

@@ -1,63 +1,69 @@
 package client.controller;
 
-//import javafx.event.ActionEvent;
-//import javafx.fxml.FXML;
-//
-//public class PlaygroundController {
-//    @FXML
-//    private void handleButtonAction (ActionEvent event) throws Exception {
-//        next();
-//    }
-//
-//    private void next() throws Exception {
-//        ScreenController screenController = ScreenController.getInstance();
-//        screenController.activate("board");
-//    }
-//}
-
-
 import client.StartClient;
+import client.controller.ScreenController;
+import client.controller.SocketManager;
+import client.model.Player;
+import javafx.animation.AnimationTimer;
 import javafx.animation.FadeTransition;
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.layout.HBox;
-import javafx.scene.text.Font;
-import javafx.scene.text.Text;
-import javafx.scene.layout.Pane;
-import javafx.scene.Node;
-import javafx.scene.paint.Color;
 import javafx.scene.image.Image;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.util.Duration;
+import server.StartServer;
 
 import java.util.ArrayList;
 import java.util.List;
-import javafx.animation.AnimationTimer;
-import javafx.util.Duration;
-import client.model.Player;
 
+public class GameController {
+    private Scene scene;
 
-public class PlaygroundController {
-    static int  WIDTH = 800;
-    static int HEIGHT = 600;
+    public GameController() {
+        try {
+            Parent rootRegistration = FXMLLoader.load(getClass().getResource("/client/resources/playground.fxml"));
+            scene = new Scene(rootRegistration, StartClient.WIDTH, StartClient.HEIGHT);
+        } catch (Exception e) {
+            // noop
+        }
+    }
+
+    public void show() {
+        StartClient.window.setScene(scene);
+    }
 
     private static AnimationTimer timer;
 
     private static Pane root;
     private static List<Node> cars = new ArrayList<>();
     private static Node frog;
+    private static Text timeLeftContainer = null;
+    private static int timeLeft;
     //private int frogSize = 39;
-    private static int startPosition = HEIGHT - 39;
+    private static int startPosition = StartClient.HEIGHT - 39;
 
     private static Player player1;
 
     private static Parent createContent() {
         root = new Pane();
-        root.setPrefSize(WIDTH, HEIGHT);
+        root.setPrefSize(StartClient.WIDTH, StartClient.HEIGHT);
 
         frog = initFrog();
         root.getChildren().add(frog);
+
+        Node t = initTimeLeftContainer();
+        root.getChildren().add(t);
 
         timer = new AnimationTimer() {
             @Override
@@ -89,7 +95,7 @@ public class PlaygroundController {
             if (car.getBoundsInParent().intersects(frog.getBoundsInParent())) {
                 // game over. reset frog
                 //frog.setTranslateX(0);
-                frog.setTranslateX((int)(WIDTH/2));
+                frog.setTranslateX((int)(StartClient.WIDTH/2));
                 frog.setTranslateY(startPosition);
             }
         }
@@ -122,10 +128,24 @@ public class PlaygroundController {
         Image image = new Image("/client/resources/assets/textures/frog.png");
         Rectangle rect = new Rectangle(38,38, Color.TRANSPARENT);
         rect.setTranslateY(startPosition);
-        rect.setTranslateX((int)(WIDTH/2));
+        rect.setTranslateX((int)(StartClient.WIDTH/2));
         ImagePattern imagePattern = new ImagePattern(image);
         rect.setFill(imagePattern);
         return rect;
+    }
+
+    private static Node initTimeLeftContainer() {
+        HBox hBox = new HBox();
+        hBox.setTranslateX(10);
+        hBox.setTranslateY(10);
+        hBox.setBackground(new Background(new BackgroundFill(Color.LIGHTBLUE, CornerRadii.EMPTY, Insets.EMPTY)));
+
+        timeLeftContainer = new Text(String.valueOf(timeLeft));
+
+        timeLeftContainer.setFont(Font.font(30));
+        //t.setOpacity(0);
+        hBox.getChildren().add(timeLeftContainer);
+        return hBox;
     }
 
     private static Node initCar() {
@@ -143,8 +163,17 @@ public class PlaygroundController {
 
     }
 
+    public static void setTimeLeft(int v) {
+        if (v < 0) {
+            return;
+        }
+        if (timeLeftContainer != null) {
+            timeLeftContainer.setText(String.valueOf(v));
+        }
+    }
+
     public static void startGame() throws Exception{
-        Scene gameScreen = new Scene(createContent(), WIDTH, HEIGHT);
+        Scene gameScreen = new Scene(createContent(), StartClient.WIDTH, StartClient.HEIGHT);
 
         // render registration scene
         StartClient.window.setScene(gameScreen);
@@ -157,7 +186,7 @@ public class PlaygroundController {
                     break;
                 case S:
                     newPosition = frog.getTranslateY() + 40;
-                    if (newPosition > HEIGHT) return;
+                    if (newPosition > StartClient.HEIGHT) return;
                     frog.setTranslateY(newPosition);
                     break;
                 case A:
@@ -168,7 +197,7 @@ public class PlaygroundController {
                     break;
                 case D:
                     newPosition = frog.getTranslateX() + 40;
-                    if (newPosition >= WIDTH) return;
+                    if (newPosition >= StartClient.WIDTH) return;
                     frog.setTranslateX(newPosition);
                     break;
                 default:

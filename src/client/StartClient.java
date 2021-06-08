@@ -2,8 +2,8 @@ package client;
 
 import client.controller.ScreenController;
 import client.controller.SocketManager;
+import client.controller.GameController;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -11,10 +11,10 @@ import javafx.stage.Stage;
 
 public class StartClient extends Application {
     public static Stage window;
-    Scene rootScreen;
+    public static Scene rootScreen;
 
-    int WIDTH = 800;
-    int HEIGHT = 600;
+    public static int WIDTH = 800;
+    public static int HEIGHT = 600;
 
     public static SocketManager socketManager;
 
@@ -22,12 +22,19 @@ public class StartClient extends Application {
         launch(args);
     }
 
+
+    //
+    public static GameController gameScreenController;
+
     @Override
     public void start(Stage primaryStage) throws Exception{
         socketManager = new SocketManager();
 
         window = primaryStage;
         window.setTitle("FROGGER GAME");
+
+        //TODO:
+        gameScreenController = new GameController();
 
         Parent rootRegistration = FXMLLoader.load(getClass().getResource("/client/resources/home.fxml"));
         rootScreen = new Scene(rootRegistration, WIDTH, HEIGHT);

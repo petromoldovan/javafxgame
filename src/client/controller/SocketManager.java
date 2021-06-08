@@ -1,6 +1,7 @@
 package client.controller;
 
 import client.StartClient;
+import client.model.Player;
 import com.sun.xml.internal.xsom.impl.scd.Step;
 import common.constants.ActionTypes;
 
@@ -120,9 +121,21 @@ public class SocketManager {
         String status = splitted[1];
 
         if (status.equalsIgnoreCase(ActionTypes.Code.SUCCESS.name())) {
+            System.out.println("message " + message);
             System.out.println("got opponent! " + splitted[2]);
 
+            // navigate to playground
+            ScreenController screenController = ScreenController.getInstance();
+            screenController.activate("playgroundScreen");
 
+            // Set players
+            Player p1 = new Player(splitted[2]);
+            PlaygroundController.setPlayers(p1, null);
+            try {
+                PlaygroundController.startGame();
+            } catch (Exception e) {
+                System.out.println("ERROR: onGetMultiplayerMatchInfoResponse#" + e.getMessage());
+            }
 
         } else {
             System.out.println("ERROR: onGetMultiplayerMatchInfoResponse# smth is wrong");

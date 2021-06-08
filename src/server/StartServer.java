@@ -8,10 +8,12 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import server.controller.Client;
 import server.controller.ClientManager;
+import server.controller.RoomManager;
 
 public class StartServer {
     public static ServerSocket serverSocket;
     public static ClientManager clientManager;
+    public static RoomManager roomManager;
     public static boolean isServerRunning = true;
 
     public static void main(String[] args) {
@@ -28,6 +30,7 @@ public class StartServer {
 
             // init manager
             clientManager = new ClientManager();
+            roomManager = new RoomManager();
 
             ThreadPoolExecutor executor = new ThreadPoolExecutor(
                     10,

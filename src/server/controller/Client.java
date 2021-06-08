@@ -95,8 +95,17 @@ public class Client implements Runnable {
             this.isLookingForMatch = false;
 
             // communicate match data to the participating client
-            this.sendDataToClient(ActionTypes.ActionType.GET_MULTIPLAYER_MATCH_INFO.name() + ";" + ActionTypes.Code.SUCCESS.name() + ";" + opponent.getID());
-            opponent.sendDataToClient(ActionTypes.ActionType.GET_MULTIPLAYER_MATCH_INFO.name() + ";" + ActionTypes.Code.SUCCESS.name() + ";" + this.getID());
+//            this.sendDataToClient(ActionTypes.ActionType.GET_MULTIPLAYER_MATCH_INFO.name() + ";" + ActionTypes.Code.SUCCESS.name() + ";" + opponent.getID());
+//            opponent.sendDataToClient(ActionTypes.ActionType.GET_MULTIPLAYER_MATCH_INFO.name() + ";" + ActionTypes.Code.SUCCESS.name() + ";" + this.getID());
+
+            Room room = StartServer.roomManager.newRoom();
+            // add clients to the new room
+            room.addClient(this);
+            room.addClient(opponent);
+
+            // send confirmation that clients joined the room with id
+            this.sendDataToClient(ActionTypes.ActionType.JOIN_ROOM.name() + ";" + ActionTypes.Code.SUCCESS.name() + ";" + room.getID());
+            opponent.sendDataToClient(ActionTypes.ActionType.JOIN_ROOM.name() + ";" + ActionTypes.Code.SUCCESS.name() + ";" + room.getID());
         }
     }
 

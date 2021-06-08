@@ -24,10 +24,4 @@ public class ClientManager {
 
         return null;
     }
-
-//    public void broadCastToAllClients() {
-//        for (Client c : allConnectedClients) {
-//
-//        }
-//    }
 }

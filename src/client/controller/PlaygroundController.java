@@ -18,25 +18,24 @@ package client.controller;
 
 import client.StartClient;
 import javafx.animation.FadeTransition;
-        import javafx.application.Application;
-        import javafx.fxml.FXMLLoader;
-        import javafx.scene.Parent;
-        import javafx.scene.Scene;
-        import javafx.scene.layout.HBox;
-        import javafx.scene.text.Font;
-        import javafx.scene.text.Text;
-        import javafx.scene.layout.Pane;
-        import javafx.scene.Node;
-        import javafx.scene.paint.Color;
-        import javafx.scene.image.Image;
-        import javafx.scene.paint.ImagePattern;
-        import javafx.scene.shape.Rectangle;
-        import javafx.stage.Stage;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.layout.HBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.scene.layout.Pane;
+import javafx.scene.Node;
+import javafx.scene.paint.Color;
+import javafx.scene.image.Image;
+import javafx.scene.paint.ImagePattern;
+import javafx.scene.shape.Rectangle;
+import javafx.stage.Stage;
 
-        import java.util.ArrayList;
-        import java.util.List;
-        import javafx.animation.AnimationTimer;
-        import javafx.util.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import javafx.animation.AnimationTimer;
+import javafx.util.Duration;
+import client.model.Player;
 
 
 public class PlaygroundController {
@@ -54,6 +53,7 @@ public class PlaygroundController {
     //private int frogSize = 39;
     private static int startPosition = HEIGHT - 39;
 
+    private static Player player1;
 
     private static Parent createContent() {
         root = new Pane();
@@ -137,6 +137,13 @@ public class PlaygroundController {
         rect.setTranslateY((int)(Math.random() * 14) * 40);
         root.getChildren().add(rect);
         return rect;
+    }
+
+    public static void setPlayers(Player p1, Player p2) {
+        player1 = p1;
+
+        // TODO: add some player specific elements
+
     }
 
     public static void startGame() throws Exception{

@@ -14,8 +14,8 @@ public class Room {
     Client c2 = null;
 
     // game related data
-    Position c1Position = new Position("1", "561");
-    Position c2Position = new Position("100", "561");
+    static Position c1Position = new Position("1", "561");
+    static Position c2Position = new Position("200", "561");
     public int remainingGameTime = 60;
     public Timer gameTimer;
 
@@ -124,9 +124,16 @@ public class Room {
 
     private String getPositionInformation() {
         String data = ";";
+//
+//        System.out.println("data before " + data);
+
         data += c1Position.toString();
+//        System.out.println("data adter pos 1 " + data);
+//        System.out.println("c1Position.toString() " + c1Position.toString());
         if (c2 != null) {
             data += ";" + c2Position.toString();
+//            System.out.println("data adter pos 2 " + data);
+//            System.out.println("c2Position.toString() " + c2Position.toString());
         }
 
         return data;

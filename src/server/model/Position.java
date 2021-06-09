@@ -1,8 +1,8 @@
 package server.model;
 
 public class Position {
-    static String x;
-    static String y;
+    String x;
+    String y;
 
     public Position(String x, String y) {
         this.x = x;
@@ -11,8 +11,8 @@ public class Position {
 
     @Override
     public String toString() {
-        return x + ";" + y;
+        return this.x + ";" + this.y;
     }
-    public void setX(String v) {x = v;}
-    public void setY(String v) {y = v;}
+    public void setX(String v) {this.x = v;}
+    public void setY(String v) {this.y = v;}
 }

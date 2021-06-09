@@ -103,6 +103,8 @@ public class Client implements Runnable {
             opponent.isLookingForMatch = false;
             this.isLookingForMatch = false;
 
+            System.out.println("======joining roon");
+
             Room room = StartServer.roomManager.newRoom();
             // add clients to the new room
             room.addClient(this);

@@ -43,7 +43,7 @@ public class StartClient extends Application {
         screenController.add("serverConnectionScreen", FXMLLoader.load(getClass().getResource("/client/resources/serverConnection.fxml")));
         screenController.add("registrationScreen", FXMLLoader.load(getClass().getResource("/client/resources/home.fxml")));
         screenController.add("dashboardScreen", FXMLLoader.load(getClass().getResource("/client/resources/dashboard.fxml")));
-        screenController.add("playgroundScreen", FXMLLoader.load(getClass().getResource("/client/resources/playground.fxml")));
+        //screenController.add("playgroundScreen", FXMLLoader.load(getClass().getResource("/client/resources/playground.fxml")));
         screenController.add("boardScreen", FXMLLoader.load(getClass().getResource("/client/resources/board.fxml")));
         screenController.activate("serverConnectionScreen");
 

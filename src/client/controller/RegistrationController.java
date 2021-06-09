@@ -31,8 +31,8 @@ public class RegistrationController {
 //        next();
     }
 
-    private void next() {
-        ScreenController screenController = ScreenController.getInstance();
-        screenController.activate("playgroundScreen");
-    }
+//    private void next() {
+//        ScreenController screenController = ScreenController.getInstance();
+//        screenController.activate("playgroundScreen");
+//    }
 }

@@ -148,19 +148,19 @@ public class GameController {
     }
 
     private static Node initFrog() {
-        Image image = new Image("/client/resources/assets/textures/frog.png");
+        Image image = new Image("/client/resources/assets/frog.png");
         Rectangle rect = new Rectangle(38,38, Color.TRANSPARENT);
-        //rect.setTranslateY(startPosition);
-        //rect.setTranslateX((int)(StartClient.WIDTH/2));
+        rect.setTranslateY(startPosition);
+        rect.setTranslateX(40);
         ImagePattern imagePattern = new ImagePattern(image);
         rect.setFill(imagePattern);
         return rect;
     }
     private static Node initFrog2() {
-        Image image = new Image("/client/resources/assets/textures/frog.png");
+        Image image = new Image("/client/resources/assets/frog2.png");
         Rectangle rect = new Rectangle(38,38, Color.TRANSPARENT);
-        //rect.setTranslateY(startPosition);
-        //rect.setTranslateX((int)(StartClient.WIDTH/2));
+        rect.setTranslateY(startPosition);
+        rect.setTranslateX(100);
         ImagePattern imagePattern = new ImagePattern(image);
         rect.setFill(imagePattern);
         return rect;

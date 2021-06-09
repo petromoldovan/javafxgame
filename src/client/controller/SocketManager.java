@@ -217,10 +217,10 @@ public class SocketManager {
         String[] splitted = message.split(";");
         int timeLeft = Integer.parseInt(splitted[6]);
 
-        System.out.println("got data " + message);
+
 
         String player2ID = splitted[4];
-
+//        System.out.println("got data " + message);
         Platform.runLater(
                 () -> {
                     try {

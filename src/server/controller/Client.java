@@ -41,9 +41,6 @@ public class Client implements Runnable {
                     case FIND_MATCH:
                         onFindMatchRequest();
                         break;
-//                    case GET_DATA_FOR_ROOM_REQUEST:
-//                        onGetDataForRoom(messageFromClient);
-//                        break;
                     case START_SINGLE_MATCH_REQUEST:
                         onStartSingleMatch();
                         break;
@@ -116,20 +113,6 @@ public class Client implements Runnable {
             room.startGame();
         }
     }
-
-//    private void onGetDataForRoom(String message) {
-//        String[] splitted = message.split(";");
-//        String roomID = splitted[1];
-//
-//        Room room = StartServer.roomManager.findRoomByID(roomID);
-//        if (room == null) {
-//            System.out.println("onGetDataForRoom#no room with id " + roomID);
-//            return;
-//        }
-//
-//        sendDataToClient(ActionTypes.ActionType.GET_DATA_FOR_ROOM_RESPONSE.name() + ";" + room.getData());
-//        room.startGame();
-//    }
 
     private void onUpdateGamePositionRequest(String message) {
         String[] splitted = message.split(";");

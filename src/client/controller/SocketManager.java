@@ -60,9 +60,6 @@ public class SocketManager {
                     case JOIN_ROOM:
                         onJoinRoomResponse(messageFromServer);
                         break;
-//                    case GET_DATA_FOR_ROOM_RESPONSE:
-//                        onGetDataForRoomResponse(messageFromServer);
-//                        break;
                     case CURRENT_GAME_DATA_RESPONSE:
                         onCurrentGameDataResponse(messageFromServer);
                         break;
@@ -97,10 +94,6 @@ public class SocketManager {
         String payload = ActionTypes.ActionType.FIND_MATCH + ";";
         sendDataToServer(payload);
     }
-
-//    public void getDataForTheRoomRequest(String roomID) {
-//        sendDataToServer(ActionTypes.ActionType.GET_DATA_FOR_ROOM_REQUEST.name() + ";" + roomID);
-//    }
 
     public void updateGamePosition(int x, int y) {
         sendDataToServer(ActionTypes.ActionType.UPDATE_GAME_POSITION_REQUEST.name() + ";" + this.roomID + ";" + x + ";" + y);
@@ -144,8 +137,6 @@ public class SocketManager {
         String[] splitted = message.split(";");
         String status = splitted[1];
 
-        //System.out.println("join room " + message);
-
         if (status.equalsIgnoreCase(ActionTypes.Code.SUCCESS.name())) {
             this.roomID = splitted[2];
 
@@ -157,7 +148,6 @@ public class SocketManager {
                             // initialize the game
                             StartClient.gameScreenController.show();
 
-                            // TODO: set players
                             Player p1 = new Player(splitted[3], splitted[4]);
                             StartClient.gameScreenController.setPlayer1(p1);
                             String p2ID = splitted[5];
@@ -188,36 +178,9 @@ public class SocketManager {
         }
     }
 
-//    private String onGetDataForRoomResponse(String message) {
-//        String[] splitted = message.split(";");
-//        int timeLeft = Integer.parseInt(splitted[5]);
-//
-//        // Avoid throwing IllegalStateException by running from a non-JavaFX thread.
-//        Platform.runLater(
-//                () -> {
-//                    try {
-//                        // initialize the game
-//                        StartClient.gameScreenController.show();
-//                        StartClient.gameScreenController.setTimeLeft(timeLeft);
-//
-//                        // TODO: set players
-//                        // TODO: set room id
-//
-//                        StartClient.gameScreenController.startGame();
-//                    } catch (Exception e) {
-//                        System.out.println("onGetDataForRoomResponse# " + e.getMessage());
-//                    }
-//                }
-//        );
-//
-//        return message;
-//    }
-
     private String onCurrentGameDataResponse(String message) {
         String[] splitted = message.split(";");
         int timeLeft = Integer.parseInt(splitted[6]);
-
-
 
         String player2ID = splitted[4];
 //        System.out.println("got data " + message);

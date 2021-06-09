@@ -75,13 +75,11 @@ public class GameController {
         root = new Pane();
         root.setPrefSize(StartClient.WIDTH, StartClient.HEIGHT);
 
-        frog = initFrog();
+        frog = initFrog(false);
         root.getChildren().add(frog);
 
-        System.out.println("prepare to building second frog");
         if (player2 != null) {
-            System.out.println("adding second frog");
-            frog2 = initFrog2();
+            frog2 = initFrog(true);
             root.getChildren().add(frog2);
         }
 
@@ -147,20 +145,14 @@ public class GameController {
         }
     }
 
-    private static Node initFrog() {
+    private static Node initFrog(Boolean isSecond) {
         Image image = new Image("/client/resources/assets/frog.png");
+        if (isSecond) {
+            image = new Image("/client/resources/assets/frog2.png");
+        }
         Rectangle rect = new Rectangle(38,38, Color.TRANSPARENT);
         rect.setTranslateY(startPosition);
         rect.setTranslateX(40);
-        ImagePattern imagePattern = new ImagePattern(image);
-        rect.setFill(imagePattern);
-        return rect;
-    }
-    private static Node initFrog2() {
-        Image image = new Image("/client/resources/assets/frog2.png");
-        Rectangle rect = new Rectangle(38,38, Color.TRANSPARENT);
-        rect.setTranslateY(startPosition);
-        rect.setTranslateX(100);
         ImagePattern imagePattern = new ImagePattern(image);
         rect.setFill(imagePattern);
         return rect;
@@ -188,13 +180,6 @@ public class GameController {
         return rect;
     }
 
-    public static void setPlayers(Player p1, Player p2) {
-        player1 = p1;
-
-        // TODO: add some player specific elements
-
-    }
-
     public static void setTimeLeft(int v) {
         if (v < 0) {
             return;
@@ -204,20 +189,16 @@ public class GameController {
         }
     }
     public static void setX1(String v) {
-        //x1 = Integer.parseInt(v);
         frog.setTranslateX(Integer.parseInt(v));
     }
     public static void setY1(String v) {
-        //y1 = Integer.parseInt(v);
         frog.setTranslateY(Integer.parseInt(v));
     }
 
     public static void setX2(String v) {
-        System.out.println("updating frog2 x " + v);
         frog2.setTranslateX(Integer.parseInt(v));
     }
     public static void setY2(String v) {
-        System.out.println("updating frog2 y " + v);
         frog2.setTranslateY(Integer.parseInt(v));
     }
 

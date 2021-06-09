@@ -14,6 +14,9 @@ public class ActionTypes {
         GET_DATA_FOR_ROOM_REQUEST,
         GET_DATA_FOR_ROOM_RESPONSE,
         CURRENT_GAME_DATA_RESPONSE,
+        UPDATE_GAME_POSITION_REQUEST,
+        START_SINGLE_MATCH_REQUEST,
+        START_SINGLE_MATCH_RESPONSE
     }
 
     public static ActionType getActionTypeFromMessage(String message) {

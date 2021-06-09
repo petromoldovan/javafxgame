@@ -101,6 +101,15 @@ public class SocketManager {
         sendDataToServer(ActionTypes.ActionType.GET_DATA_FOR_ROOM_REQUEST.name() + ";" + roomID);
     }
 
+    public void updateGamePosition(String roomID, String clientID, int x, int y) {
+        sendDataToServer(ActionTypes.ActionType.UPDATE_GAME_POSITION_REQUEST.name() + ";" + roomID);
+    }
+
+    public void startSingleMatch() {
+        String payload = ActionTypes.ActionType.START_SINGLE_MATCH_REQUEST.name() + ";";
+        sendDataToServer(payload);
+    }
+
     // Responses from server
 
     private void onLoginUserResponse(String message) {
@@ -141,10 +150,6 @@ public class SocketManager {
             // retrieve data for the room
             getDataForTheRoomRequest(this.roomID);
 
-
-            // Set players
-//            Player p1 = new Player(splitted[2]);
-//            PlaygroundController.setPlayers(p1, null);
             try {
                 PlaygroundController.startGame();
             } catch (Exception e) {
@@ -157,15 +162,20 @@ public class SocketManager {
     }
 
     private String onGetDataForRoomResponse(String message) {
-        System.out.println("onGetDataForRoomResponse message " + message);
-
+        String[] splitted = message.split(";");
+        int timeLeft = Integer.parseInt(splitted[5]);
 
         // Avoid throwing IllegalStateException by running from a non-JavaFX thread.
         Platform.runLater(
                 () -> {
                     try {
+                        // initialize the game
                         StartClient.gameScreenController.show();
-                        StartClient.gameScreenController.setTimeLeft(60);
+                        StartClient.gameScreenController.setTimeLeft(timeLeft);
+
+                        // TODO: set players
+                        // TODO: set room id
+
                         StartClient.gameScreenController.startGame();
                     } catch (Exception e) {
                         System.out.println("onGetDataForRoomResponse# " + e.getMessage());
@@ -190,9 +200,6 @@ public class SocketManager {
                 }
         );
 
-
-        System.out.println("splitted.length " + splitted[5]);
-        System.out.println("onCurrentGameDataResponse message " + message);
         return message;
     }
 }

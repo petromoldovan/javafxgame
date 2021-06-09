@@ -182,6 +182,7 @@ public class GameController {
             double newPosition;
             switch (event.getCode()) {
                 case W:
+                    // set new position
                     frog.setTranslateY(frog.getTranslateY() - 40);
                     break;
                 case S:

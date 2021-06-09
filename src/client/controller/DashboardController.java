@@ -16,10 +16,9 @@ public class DashboardController {
 //        ScreenController screenController = ScreenController.getInstance();
 //        screenController.activate("playgroundScreen");
 //        PlaygroundController.startGame();
-        StartClient.gameScreenController.show();
-        StartClient.gameScreenController.setTimeLeft(60);
-        StartClient.gameScreenController.startGame();
-        StartClient.gameScreenController.setTimeLeft(59);
+        //StartClient.gameScreenController.show();
+        //StartClient.gameScreenController.startGame();
+        StartClient.socketManager.startSingleMatch();
     }
 
     public void startMultiplayer(ActionEvent actionEvent) {

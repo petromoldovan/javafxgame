@@ -44,6 +44,9 @@ public class Client implements Runnable {
                     case GET_DATA_FOR_ROOM_REQUEST:
                         onGetDataForRoom(messageFromClient);
                         break;
+                    case START_SINGLE_MATCH_REQUEST:
+                        onStartSingleMatch();
+                        break;
                     case INVALID:
                         System.out.println("ERROR: invalid type " + type);
                         break;
@@ -120,6 +123,17 @@ public class Client implements Runnable {
 
         sendDataToClient(ActionTypes.ActionType.GET_DATA_FOR_ROOM_RESPONSE.name() + ";" + room.getData());
         room.startGame();
+    }
+
+    private void onStartSingleMatch() {
+        this.isLookingForMatch = false;
+
+        Room room = StartServer.roomManager.newRoom();
+        // add clients to the new room
+        room.addClient(this);
+
+        // send confirmation that clients joined the room with id
+        this.sendDataToClient(ActionTypes.ActionType.JOIN_ROOM.name() + ";" + ActionTypes.Code.SUCCESS.name() + ";" + room.getID());
     }
 
     public boolean isLookingForMatch() {

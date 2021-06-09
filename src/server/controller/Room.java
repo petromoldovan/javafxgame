@@ -14,8 +14,8 @@ public class Room {
     Client c2 = null;
 
     // game related data
-    Position c1Position = new Position(1, 1);
-    Position c2Position = new Position(40, 1);
+    Position c1Position = new Position("1", "561");
+    Position c2Position = new Position("100", "561");
     public int remainingGameTime = 60;
     public Timer gameTimer;
 
@@ -59,7 +59,7 @@ public class Room {
 
     public boolean addClient(Client c) {
         // check if room is full
-        if (participants.size() > 2) {
+        if (participants.size() >= 2) {
             return false;
         }
 
@@ -91,7 +91,7 @@ public class Room {
         String data = "";
 
         // get room id
-        data += this.id;
+        data += this.id + ";";
 
         // get player info
         data += getClientMetaInformation();
@@ -117,7 +117,7 @@ public class Room {
         if (c2 != null) {
             data += c2.getClientData();
         } else {
-            data += c1.getEmptyClientData();
+            data += c2.getEmptyClientData();
         }
         return data;
     }
@@ -130,5 +130,20 @@ public class Room {
         }
 
         return data;
+    }
+
+    public void updateClientPosition(String clientID, String x, String y) {
+        if (c1 != null && c1.getID() == clientID) {
+            System.out.println("update c1");
+            System.out.println("x " + x);
+            System.out.println("y " + x);
+            c1Position.setX(x);
+            c1Position.setY(y);
+        } else if (c2 != null && c2.getID() == clientID) {
+            System.out.println("update c2");
+            c2Position.setX(x);
+            c2Position.setY(y);
+        }
+        System.out.println("fin update");
     }
 }

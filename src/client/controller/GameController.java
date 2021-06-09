@@ -55,6 +55,9 @@ public class GameController {
 
     private static Player player1;
 
+    private static int x1;
+    private static int y1;
+
     private static Parent createContent() {
         root = new Pane();
         root.setPrefSize(StartClient.WIDTH, StartClient.HEIGHT);
@@ -171,6 +174,14 @@ public class GameController {
             timeLeftContainer.setText(String.valueOf(v));
         }
     }
+    public static void setX1(String v) {
+        //x1 = Integer.parseInt(v);
+        frog.setTranslateX(Integer.parseInt(v));
+    }
+    public static void setY1(String v) {
+        //y1 = Integer.parseInt(v);
+        frog.setTranslateY(Integer.parseInt(v));
+    }
 
     public static void startGame() throws Exception{
         Scene gameScreen = new Scene(createContent(), StartClient.WIDTH, StartClient.HEIGHT);
@@ -183,23 +194,28 @@ public class GameController {
             switch (event.getCode()) {
                 case W:
                     // set new position
-                    frog.setTranslateY(frog.getTranslateY() - 40);
+                    StartClient.socketManager.updateGamePosition((int)frog.getTranslateX(), (int)(frog.getTranslateY() - 40));
+                    //frog.setTranslateY(frog.getTranslateY() - 40);
                     break;
                 case S:
                     newPosition = frog.getTranslateY() + 40;
                     if (newPosition > StartClient.HEIGHT) return;
-                    frog.setTranslateY(newPosition);
+                    StartClient.socketManager.updateGamePosition((int)frog.getTranslateX(), (int)newPosition);
+                    //frog.setTranslateY(newPosition);
                     break;
                 case A:
                     newPosition = frog.getTranslateX() - 40;
                     if (newPosition < 0) return;
-                    frog.setTranslateX(newPosition);
+
+                    StartClient.socketManager.updateGamePosition((int)newPosition, (int)frog.getTranslateY());
+                    //frog.setTranslateX(newPosition);
 
                     break;
                 case D:
                     newPosition = frog.getTranslateX() + 40;
                     if (newPosition >= StartClient.WIDTH) return;
-                    frog.setTranslateX(newPosition);
+                    StartClient.socketManager.updateGamePosition((int)newPosition, (int)frog.getTranslateY());
+                    //frog.setTranslateX(newPosition);
                     break;
                 default:
                     break;

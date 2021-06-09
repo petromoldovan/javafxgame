@@ -101,8 +101,8 @@ public class SocketManager {
 //        sendDataToServer(ActionTypes.ActionType.GET_DATA_FOR_ROOM_REQUEST.name() + ";" + roomID);
 //    }
 
-    public void updateGamePosition(String roomID, String clientID, int x, int y) {
-        sendDataToServer(ActionTypes.ActionType.UPDATE_GAME_POSITION_REQUEST.name() + ";" + roomID);
+    public void updateGamePosition(int x, int y) {
+        sendDataToServer(ActionTypes.ActionType.UPDATE_GAME_POSITION_REQUEST.name() + ";" + this.roomID + ";" + x + ";" + y);
     }
 
     public void startSingleMatch() {
@@ -139,6 +139,8 @@ public class SocketManager {
     private void onJoinRoomResponse(String message) {
         String[] splitted = message.split(";");
         String status = splitted[1];
+
+        //System.out.println("join room " + message);
 
         if (status.equalsIgnoreCase(ActionTypes.Code.SUCCESS.name())) {
             this.roomID = splitted[2];
@@ -206,12 +208,15 @@ public class SocketManager {
         String[] splitted = message.split(";");
         int timeLeft = Integer.parseInt(splitted[6]);
 
+        System.out.println("got data " + message);
+
         Platform.runLater(
                 () -> {
                     try {
                         StartClient.gameScreenController.setTimeLeft(timeLeft);
-                        // set player positions
-
+                        // set player position
+                        StartClient.gameScreenController.setX1(splitted[7]);
+                        StartClient.gameScreenController.setY1(splitted[8]);
                     } catch (Exception e) {
                         System.out.println("onGetDataForRoomResponse# " + e.getMessage());
                     }

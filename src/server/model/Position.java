@@ -1,10 +1,10 @@
 package server.model;
 
 public class Position {
-    int x;
-    int y;
+    static String x;
+    static String y;
 
-    public Position(int x, int y) {
+    public Position(String x, String y) {
         this.x = x;
         this.y = y;
     }
@@ -13,4 +13,6 @@ public class Position {
     public String toString() {
         return x + ";" + y;
     }
+    public void setX(String v) {x = v;}
+    public void setY(String v) {y = v;}
 }

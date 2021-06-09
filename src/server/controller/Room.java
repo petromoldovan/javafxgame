@@ -90,6 +90,9 @@ public class Room {
     public String getData() {
         String data = "";
 
+        // get room id
+        data += this.id;
+
         // get player info
         data += getClientMetaInformation();
 

@@ -59,9 +59,9 @@ public class SocketManager {
                     case JOIN_ROOM:
                         onJoinRoomResponse(messageFromServer);
                         break;
-                    case GET_DATA_FOR_ROOM_RESPONSE:
-                        onGetDataForRoomResponse(messageFromServer);
-                        break;
+//                    case GET_DATA_FOR_ROOM_RESPONSE:
+//                        onGetDataForRoomResponse(messageFromServer);
+//                        break;
                     case CURRENT_GAME_DATA_RESPONSE:
                         onCurrentGameDataResponse(messageFromServer);
                         break;
@@ -97,9 +97,9 @@ public class SocketManager {
         sendDataToServer(payload);
     }
 
-    public void getDataForTheRoomRequest(String roomID) {
-        sendDataToServer(ActionTypes.ActionType.GET_DATA_FOR_ROOM_REQUEST.name() + ";" + roomID);
-    }
+//    public void getDataForTheRoomRequest(String roomID) {
+//        sendDataToServer(ActionTypes.ActionType.GET_DATA_FOR_ROOM_REQUEST.name() + ";" + roomID);
+//    }
 
     public void updateGamePosition(String roomID, String clientID, int x, int y) {
         sendDataToServer(ActionTypes.ActionType.UPDATE_GAME_POSITION_REQUEST.name() + ";" + roomID);
@@ -144,56 +144,74 @@ public class SocketManager {
             this.roomID = splitted[2];
 
             // navigate to playground
-            ScreenController screenController = ScreenController.getInstance();
-            screenController.activate("playgroundScreen");
+//            ScreenController screenController = ScreenController.getInstance();
+//            screenController.activate("playgroundScreen");
+//
+//            // retrieve data for the room
+//            getDataForTheRoomRequest(this.roomID);
+//
+//            try {
+//                PlaygroundController.startGame();
+//            } catch (Exception e) {
+//                System.out.println("ERROR: onGetMultiplayerMatchInfoResponse#" + e.getMessage());
+//            }
+            Platform.runLater(
+                    () -> {
+                        try {
+                            // initialize the game
+                            StartClient.gameScreenController.show();
+                            //StartClient.gameScreenController.setTimeLeft(60);
 
-            // retrieve data for the room
-            getDataForTheRoomRequest(this.roomID);
+                            // TODO: set players
+                            // TODO: set room id
 
-            try {
-                PlaygroundController.startGame();
-            } catch (Exception e) {
-                System.out.println("ERROR: onGetMultiplayerMatchInfoResponse#" + e.getMessage());
-            }
+                            StartClient.gameScreenController.startGame();
+                        } catch (Exception e) {
+                            System.out.println("onGetDataForRoomResponse# " + e.getMessage());
+                        }
+                    }
+            );
 
         } else {
             System.out.println("ERROR: onGetMultiplayerMatchInfoResponse# smth is wrong");
         }
     }
 
-    private String onGetDataForRoomResponse(String message) {
-        String[] splitted = message.split(";");
-        int timeLeft = Integer.parseInt(splitted[5]);
-
-        // Avoid throwing IllegalStateException by running from a non-JavaFX thread.
-        Platform.runLater(
-                () -> {
-                    try {
-                        // initialize the game
-                        StartClient.gameScreenController.show();
-                        StartClient.gameScreenController.setTimeLeft(timeLeft);
-
-                        // TODO: set players
-                        // TODO: set room id
-
-                        StartClient.gameScreenController.startGame();
-                    } catch (Exception e) {
-                        System.out.println("onGetDataForRoomResponse# " + e.getMessage());
-                    }
-                }
-        );
-
-        return message;
-    }
+//    private String onGetDataForRoomResponse(String message) {
+//        String[] splitted = message.split(";");
+//        int timeLeft = Integer.parseInt(splitted[5]);
+//
+//        // Avoid throwing IllegalStateException by running from a non-JavaFX thread.
+//        Platform.runLater(
+//                () -> {
+//                    try {
+//                        // initialize the game
+//                        StartClient.gameScreenController.show();
+//                        StartClient.gameScreenController.setTimeLeft(timeLeft);
+//
+//                        // TODO: set players
+//                        // TODO: set room id
+//
+//                        StartClient.gameScreenController.startGame();
+//                    } catch (Exception e) {
+//                        System.out.println("onGetDataForRoomResponse# " + e.getMessage());
+//                    }
+//                }
+//        );
+//
+//        return message;
+//    }
 
     private String onCurrentGameDataResponse(String message) {
         String[] splitted = message.split(";");
-        int timeLeft = Integer.parseInt(splitted[5]);
+        int timeLeft = Integer.parseInt(splitted[6]);
 
         Platform.runLater(
                 () -> {
                     try {
                         StartClient.gameScreenController.setTimeLeft(timeLeft);
+                        // set player positions
+
                     } catch (Exception e) {
                         System.out.println("onGetDataForRoomResponse# " + e.getMessage());
                     }

@@ -19,6 +19,7 @@ public class SocketManager {
     DataOutputStream dataOutputStream;
     Thread listener = null;
     String roomID = null;
+    String clientID = null;
 
     public boolean connect(String host, int port) {
         try {
@@ -117,6 +118,9 @@ public class SocketManager {
         String status = splitted[1];
 
         if (status.equalsIgnoreCase(ActionTypes.Code.SUCCESS.name())) {
+            // set client id
+            this.clientID = splitted[2];
+
             ScreenController screenController = ScreenController.getInstance();
             screenController.activate("dashboardScreen");
         } else {
@@ -145,27 +149,32 @@ public class SocketManager {
         if (status.equalsIgnoreCase(ActionTypes.Code.SUCCESS.name())) {
             this.roomID = splitted[2];
 
-            // navigate to playground
-//            ScreenController screenController = ScreenController.getInstance();
-//            screenController.activate("playgroundScreen");
-//
-//            // retrieve data for the room
-//            getDataForTheRoomRequest(this.roomID);
-//
-//            try {
-//                PlaygroundController.startGame();
-//            } catch (Exception e) {
-//                System.out.println("ERROR: onGetMultiplayerMatchInfoResponse#" + e.getMessage());
-//            }
+            System.out.println("message " + message);
+
             Platform.runLater(
                     () -> {
                         try {
                             // initialize the game
                             StartClient.gameScreenController.show();
-                            //StartClient.gameScreenController.setTimeLeft(60);
 
                             // TODO: set players
-                            // TODO: set room id
+                            Player p1 = new Player(splitted[3], splitted[4]);
+                            StartClient.gameScreenController.setPlayer1(p1);
+                            String p2ID = splitted[5];
+                            if (!p2ID.equals("")) {
+                                System.out.println("setting second player...");
+                                Player p2 = new Player(splitted[5], splitted[6]);
+                                StartClient.gameScreenController.setPlayer2(p2);
+                            }
+                            // set the frog that is controlled by the current client
+                            if (p1.getID().equals(this.clientID)) {
+                                System.out.println("I AM THE FIRST CLIUENT!");
+                                StartClient.gameScreenController.isControllingFirstFrog(true);
+                            } else {
+                                System.out.println("I AM THE FIRST SECOND CLEINT!");
+                                // user is controlling the second frog
+                                StartClient.gameScreenController.isControllingFirstFrog(false);
+                            }
 
                             StartClient.gameScreenController.startGame();
                         } catch (Exception e) {
@@ -210,6 +219,8 @@ public class SocketManager {
 
         System.out.println("got data " + message);
 
+        String player2ID = splitted[4];
+
         Platform.runLater(
                 () -> {
                     try {
@@ -217,6 +228,13 @@ public class SocketManager {
                         // set player position
                         StartClient.gameScreenController.setX1(splitted[7]);
                         StartClient.gameScreenController.setY1(splitted[8]);
+
+                        // add second player
+                        if (!player2ID.equals("")) {
+                            StartClient.gameScreenController.setX2(splitted[9]);
+                            StartClient.gameScreenController.setY2(splitted[10]);
+                        }
+
                     } catch (Exception e) {
                         System.out.println("onGetDataForRoomResponse# " + e.getMessage());
                     }

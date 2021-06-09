@@ -85,7 +85,7 @@ public class Client implements Runnable {
         this.username = username;
 
         // send user data to
-        sendDataToClient(ActionTypes.ActionType.LOGIN_USER.name() + ";" + ActionTypes.Code.SUCCESS.name() + ";" + username);
+        sendDataToClient(ActionTypes.ActionType.LOGIN_USER.name() + ";" + ActionTypes.Code.SUCCESS.name() + ";" + this.clientID);
     }
 
     private void onFindMatchRequest() {

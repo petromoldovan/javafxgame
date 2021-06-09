@@ -48,15 +48,28 @@ public class GameController {
     private static Pane root;
     private static List<Node> cars = new ArrayList<>();
     private static Node frog;
+    private static Node frog2;
     private static Text timeLeftContainer = null;
     private static int timeLeft;
     //private int frogSize = 39;
     private static int startPosition = StartClient.HEIGHT - 39;
 
     private static Player player1;
+    private static Player player2;
+    private static boolean isControllingFirstFrog;
 
     private static int x1;
     private static int y1;
+
+    public static void setPlayer1(Player p) {
+        player1 = p;
+    }
+    public static void setPlayer2(Player p) {
+        player2 = p;
+    }
+    public static void isControllingFirstFrog(boolean b) {
+        isControllingFirstFrog = b;
+    }
 
     private static Parent createContent() {
         root = new Pane();
@@ -64,6 +77,13 @@ public class GameController {
 
         frog = initFrog();
         root.getChildren().add(frog);
+
+        System.out.println("prepare to building second frog");
+        if (player2 != null) {
+            System.out.println("adding second frog");
+            frog2 = initFrog2();
+            root.getChildren().add(frog2);
+        }
 
         Node t = initTimeLeftContainer();
         root.getChildren().add(t);
@@ -130,8 +150,17 @@ public class GameController {
     private static Node initFrog() {
         Image image = new Image("/client/resources/assets/textures/frog.png");
         Rectangle rect = new Rectangle(38,38, Color.TRANSPARENT);
-        rect.setTranslateY(startPosition);
-        rect.setTranslateX((int)(StartClient.WIDTH/2));
+        //rect.setTranslateY(startPosition);
+        //rect.setTranslateX((int)(StartClient.WIDTH/2));
+        ImagePattern imagePattern = new ImagePattern(image);
+        rect.setFill(imagePattern);
+        return rect;
+    }
+    private static Node initFrog2() {
+        Image image = new Image("/client/resources/assets/textures/frog.png");
+        Rectangle rect = new Rectangle(38,38, Color.TRANSPARENT);
+        //rect.setTranslateY(startPosition);
+        //rect.setTranslateX((int)(StartClient.WIDTH/2));
         ImagePattern imagePattern = new ImagePattern(image);
         rect.setFill(imagePattern);
         return rect;
@@ -183,39 +212,49 @@ public class GameController {
         frog.setTranslateY(Integer.parseInt(v));
     }
 
+    public static void setX2(String v) {
+        System.out.println("updating frog2 x " + v);
+        frog2.setTranslateX(Integer.parseInt(v));
+    }
+    public static void setY2(String v) {
+        System.out.println("updating frog2 y " + v);
+        frog2.setTranslateY(Integer.parseInt(v));
+    }
+
     public static void startGame() throws Exception{
         Scene gameScreen = new Scene(createContent(), StartClient.WIDTH, StartClient.HEIGHT);
 
         // render registration scene
         StartClient.window.setScene(gameScreen);
 
+        // set the frog that the client is controlling
+        Node controlledFrog = frog;
+        if (!isControllingFirstFrog) {
+            controlledFrog = frog2;
+        }
+        Node finalControlledFrog = controlledFrog;
+
         StartClient.window.getScene().setOnKeyPressed(event -> {
             double newPosition;
             switch (event.getCode()) {
                 case W:
                     // set new position
-                    StartClient.socketManager.updateGamePosition((int)frog.getTranslateX(), (int)(frog.getTranslateY() - 40));
-                    //frog.setTranslateY(frog.getTranslateY() - 40);
+                    StartClient.socketManager.updateGamePosition((int) finalControlledFrog.getTranslateX(), (int)(finalControlledFrog.getTranslateY() - 40));
                     break;
                 case S:
-                    newPosition = frog.getTranslateY() + 40;
+                    newPosition = finalControlledFrog.getTranslateY() + 40;
                     if (newPosition > StartClient.HEIGHT) return;
-                    StartClient.socketManager.updateGamePosition((int)frog.getTranslateX(), (int)newPosition);
-                    //frog.setTranslateY(newPosition);
+                    StartClient.socketManager.updateGamePosition((int)finalControlledFrog.getTranslateX(), (int)newPosition);
                     break;
                 case A:
-                    newPosition = frog.getTranslateX() - 40;
+                    newPosition = finalControlledFrog.getTranslateX() - 40;
                     if (newPosition < 0) return;
-
-                    StartClient.socketManager.updateGamePosition((int)newPosition, (int)frog.getTranslateY());
-                    //frog.setTranslateX(newPosition);
-
+                    StartClient.socketManager.updateGamePosition((int)newPosition, (int)finalControlledFrog.getTranslateY());
                     break;
                 case D:
-                    newPosition = frog.getTranslateX() + 40;
+                    newPosition = finalControlledFrog.getTranslateX() + 40;
                     if (newPosition >= StartClient.WIDTH) return;
-                    StartClient.socketManager.updateGamePosition((int)newPosition, (int)frog.getTranslateY());
-                    //frog.setTranslateX(newPosition);
+                    StartClient.socketManager.updateGamePosition((int)newPosition, (int)finalControlledFrog.getTranslateY());
                     break;
                 default:
                     break;

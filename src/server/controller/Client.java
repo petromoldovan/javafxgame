@@ -33,7 +33,6 @@ public class Client implements Runnable {
                 // read request from the client
                 String messageFromClient = dataInputStream.readUTF();
                 ActionTypes.ActionType type = ActionTypes.getActionTypeFromMessage(messageFromClient);
-
                 switch (type) {
                     case LOGIN_USER:
                         onLoginUser(messageFromClient);

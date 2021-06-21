@@ -23,7 +23,7 @@ public class StartClient extends Application {
     }
 
 
-    //
+    // GameController instance
     public static GameController gameScreenController;
 
     @Override

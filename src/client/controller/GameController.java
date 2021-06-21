@@ -24,6 +24,7 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import server.StartServer;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -74,6 +75,9 @@ public class GameController {
     private static Parent createContent() {
         root = new Pane();
         root.setPrefSize(StartClient.WIDTH, StartClient.HEIGHT);
+  
+        File file = new File("src/client/resources/assets/sand.jpeg");
+        root.setStyle("-fx-background-image: url('file:"+file.getAbsolutePath()+"');");
 
         frog = initFrog(false);
         root.getChildren().add(frog);
@@ -167,7 +171,6 @@ public class GameController {
         timeLeftContainer = new Text(String.valueOf(timeLeft));
 
         timeLeftContainer.setFont(Font.font(30));
-        //t.setOpacity(0);
         hBox.getChildren().add(timeLeftContainer);
         return hBox;
     }

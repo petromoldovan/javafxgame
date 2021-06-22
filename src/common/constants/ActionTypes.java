@@ -15,6 +15,8 @@ public class ActionTypes {
         UPDATE_GAME_POSITION_REQUEST,
         START_SINGLE_MATCH_REQUEST,
         RESET_GAME_POSITION_REQUEST,
+        GAME_EVENT_TIMEOUT,
+        GAME_EVENT_WIN
     }
 
     public static ActionType getActionTypeFromMessage(String message) {

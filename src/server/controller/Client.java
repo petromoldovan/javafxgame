@@ -49,6 +49,12 @@ public class Client implements Runnable {
                     case RESET_GAME_POSITION_REQUEST:
                         onResetGamePositionRequest(messageFromClient);
                         break;
+                    case GAME_EVENT_TIMEOUT:
+                        onGameTimeoutRequest(messageFromClient);
+                        break;
+//                    case GAME_EVENT_WIN:
+//                        onGameTimeoutRequest(messageFromClient);
+//                        break;
                     case INVALID:
                         System.out.println("ERROR: invalid type " + type);
                         break;
@@ -139,6 +145,18 @@ public class Client implements Runnable {
             return;
         }
         room.resetClientPosition(clientID);
+    }
+
+    private void onGameTimeoutRequest(String message) {
+        String[] splitted = message.split(";");
+        String roomID = splitted[1];
+
+        Room room = StartServer.roomManager.findRoomByID(roomID);
+        if (room == null) {
+            // room could be already deleted
+            return;
+        }
+        room.onTimeoutEvent();
     }
 
     private void onStartSingleMatch() {

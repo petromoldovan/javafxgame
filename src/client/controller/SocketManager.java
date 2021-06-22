@@ -108,6 +108,14 @@ public class SocketManager {
         sendDataToServer(payload);
     }
 
+    public void onGameTimeoutRequest() {
+        String payload = ActionTypes.ActionType.GAME_EVENT_TIMEOUT.name() + ";" + this.roomID;
+        sendDataToServer(payload);
+
+        // clean room id
+        this.roomID = "";
+    }
+
     // Responses from server
 
     private void onLoginUserResponse(String message) {

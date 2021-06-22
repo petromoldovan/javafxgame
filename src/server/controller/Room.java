@@ -9,7 +9,7 @@ import java.util.TimerTask;
 import java.util.ArrayList;
 
 public class Room {
-    String id;
+    private static String id;
     Client c1 = null;
     Client c2 = null;
 
@@ -22,7 +22,7 @@ public class Room {
     static Position c1Position = new Position(c1StartPositionX, c1StartPositionY);
     static Position c2Position = new Position(c2StartPositionX, c2StartPositionY);
     public int remainingGameTime = 60;
-    public Timer gameTimer;
+    private static Timer gameTimer;
 
     int currTick = 0;
     int oneTick = 100;
@@ -31,13 +31,13 @@ public class Room {
 
     public Room(String id) {
         this.id = id;
-        this.gameTimer = new Timer();
+        gameTimer = new Timer();
     }
 
     // trigger game start with constant updates
     public void startGame() {
         // broadcast game info
-        this.gameTimer.scheduleAtFixedRate(new TimerTask() {
+        gameTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 // reduce remaining time
@@ -52,14 +52,17 @@ public class Room {
                 broadcast(ActionTypes.ActionType.CURRENT_GAME_DATA_RESPONSE.name() + ";" + getData());
 
                 if (remainingGameTime < 0) {
-                    gameTimer.cancel();
-                    gameTimer.purge();
+                    stopTimer();
                 }
             }
         }, 0, oneTick);
 
-        // TODO: close room
         // TODO: send end game
+    }
+
+    private static void stopTimer() {
+        gameTimer.cancel();
+        gameTimer.purge();
     }
 
     public boolean addClient(Client c) {
@@ -154,5 +157,19 @@ public class Room {
         } else if (c2 != null && c2.getID() == clientID) {
             c2Position = new Position(c2StartPositionX, c2StartPositionY);
         }
+    }
+
+    private static void gameOver() {
+        stopTimer();
+        RoomManager.deleteRoomByID(id);
+    }
+
+    public void onWinEvent() {
+        // TODO: save winner score
+
+        gameOver();
+    }
+    public void onTimeoutEvent() {
+        gameOver();
     }
 }

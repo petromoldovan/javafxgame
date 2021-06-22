@@ -30,16 +30,6 @@ import java.util.List;
 
 public class GameController {
     private Scene scene;
-
-    public GameController() {
-        try {
-            Parent rootRegistration = FXMLLoader.load(getClass().getResource("/client/resources/playground.fxml"));
-            scene = new Scene(rootRegistration, StartClient.WIDTH, StartClient.HEIGHT);
-        } catch (Exception e) {
-            // noop
-        }
-    }
-
     public void show() {
         StartClient.window.setScene(scene);
     }
@@ -85,6 +75,12 @@ public class GameController {
 
     private static Parent createContent() {
         root = new Pane();
+//        try {
+//            root = FXMLLoader.load(GameController.class.getResource("/client/resources/playground.fxml"));
+//        } catch (Exception e) {
+//            // noop
+//        }
+
         root.setPrefSize(StartClient.WIDTH, StartClient.HEIGHT);
 
         // textures
@@ -171,24 +167,7 @@ public class GameController {
     private static boolean checkWinCondition(Node fr) {
         if (fr.getTranslateY() <= 10) {
             timer.stop();
-
-            String win = "YOU WIN";
-            HBox hBox = new HBox();
-            hBox.setTranslateX(300);
-            hBox.setTranslateY(250);
-            root.getChildren().add(hBox);
-            for (int i = 0; i < win.toCharArray().length; i++) {
-                char letter = win.charAt(i);
-                Text text = new Text(String.valueOf(letter));
-                text.setFont(Font.font(50));
-                text.setOpacity(0);
-
-                hBox.getChildren().add(text);
-                FadeTransition ft = new FadeTransition(Duration.seconds(0.66), text);
-                ft.setToValue(1);
-                ft.setDelay(Duration.seconds(i * 0.15));
-                ft.play();
-            }
+            showGameOverMessage(false);
             return true;
         }
         return false;
@@ -244,6 +223,19 @@ public class GameController {
         return;
     }
 
+    public static void showGameOverMessage(boolean isTimeout) {
+        Text text = new Text("YOU WIN");
+        if (isTimeout) {
+            text = new Text("Time is UP");
+        }
+        HBox hBox = new HBox();
+        hBox.setTranslateX(300);
+        hBox.setTranslateY(250);
+        root.getChildren().add(hBox);
+        text.setFont(Font.font(50));
+        hBox.getChildren().add(text);
+    }
+
     public static void setTimeLeft(int v) {
         if (v < 0) {
             return;
@@ -260,6 +252,11 @@ public class GameController {
 
             timeLeftContainer.setText(String.valueOf(v));
         }
+
+        if (v == 0) {
+            showGameOverMessage(true);
+            StartClient.socketManager.onGameTimeoutRequest();
+        }
     }
     public static void setX1(String v) {
         frog.setTranslateX(Integer.parseInt(v));
@@ -273,10 +270,6 @@ public class GameController {
     }
     public static void setY2(String v) {
         frog2.setTranslateY(Integer.parseInt(v));
-    }
-
-    private static boolean isMultiplayer() {
-        return player2 != null && player1 != null;
     }
 
     private static boolean arePlayersColliding(int newX, int newY) {

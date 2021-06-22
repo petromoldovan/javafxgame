@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.UUID;
 
 public class RoomManager {
-    ArrayList<Room> allRooms;
+    static ArrayList<Room> allRooms;
 
     public RoomManager() {
         allRooms = new ArrayList<>();
@@ -23,5 +23,16 @@ public class RoomManager {
             }
         }
         return null;
+    }
+
+    public static void deleteRoomByID(String id) {
+        int idx = 0;
+        for (Room room : allRooms) {
+            if (room.getID().equals(id)) {
+                allRooms.remove(idx);
+                return;
+            }
+            idx++;
+        }
     }
 }

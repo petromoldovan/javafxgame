@@ -99,6 +99,10 @@ public class SocketManager {
         sendDataToServer(ActionTypes.ActionType.UPDATE_GAME_POSITION_REQUEST.name() + ";" + this.roomID + ";" + x + ";" + y);
     }
 
+    public void resetGamePosition() {
+        sendDataToServer(ActionTypes.ActionType.RESET_GAME_POSITION_REQUEST.name() + ";" + this.roomID);
+    }
+
     public void startSingleMatch() {
         String payload = ActionTypes.ActionType.START_SINGLE_MATCH_REQUEST.name() + ";";
         sendDataToServer(payload);

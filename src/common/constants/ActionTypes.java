@@ -14,6 +14,7 @@ public class ActionTypes {
         CURRENT_GAME_DATA_RESPONSE,
         UPDATE_GAME_POSITION_REQUEST,
         START_SINGLE_MATCH_REQUEST,
+        RESET_GAME_POSITION_REQUEST,
     }
 
     public static ActionType getActionTypeFromMessage(String message) {

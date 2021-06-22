@@ -155,17 +155,9 @@ public class GameController {
 
     private static void checkState() {
         for (Node car : cars) {
-            if (car.getBoundsInParent().intersects(frog.getBoundsInParent())) {
-                // game over. reset frog
-                frog.setTranslateX((int)(StartClient.WIDTH/2));
-                frog.setTranslateY(startPosition);
-            }
-            if (frog2 != null) {
-                if (car.getBoundsInParent().intersects(frog2.getBoundsInParent())) {
-                    // game over. reset frog
-                    frog2.setTranslateX((int)(StartClient.WIDTH/2));
-                    frog2.setTranslateY(startPosition + frogSize);
-                }
+            if (car.getBoundsInParent().intersects(controlledFrog.getBoundsInParent())) {
+                // reset frog position
+                StartClient.socketManager.resetGamePosition();
             }
         }
 

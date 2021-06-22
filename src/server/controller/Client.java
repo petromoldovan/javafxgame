@@ -46,6 +46,9 @@ public class Client implements Runnable {
                     case UPDATE_GAME_POSITION_REQUEST:
                         onUpdateGamePositionRequest(messageFromClient);
                         break;
+                    case RESET_GAME_POSITION_REQUEST:
+                        onResetGamePositionRequest(messageFromClient);
+                        break;
                     case INVALID:
                         System.out.println("ERROR: invalid type " + type);
                         break;
@@ -123,9 +126,19 @@ public class Client implements Runnable {
             return;
         }
 
-        System.out.println("updating pposition" + clientID + "  " +  splitted[2] + "  "+  splitted[3]);
-
         room.updateClientPosition(clientID, splitted[2], splitted[3]);
+    }
+
+    private void onResetGamePositionRequest(String message) {
+        String[] splitted = message.split(";");
+        String roomID = splitted[1];
+
+        Room room = StartServer.roomManager.findRoomByID(roomID);
+        if (room == null) {
+            System.out.println("onResetGamePositionRequest#no room with id " + roomID);
+            return;
+        }
+        room.resetClientPosition(clientID);
     }
 
     private void onStartSingleMatch() {

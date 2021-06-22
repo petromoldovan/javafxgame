@@ -13,9 +13,14 @@ public class Room {
     Client c1 = null;
     Client c2 = null;
 
+    public static String c1StartPositionX = "1";
+    public static String c1StartPositionY = "761";
+    public static String c2StartPositionX = "200";
+    public static String c2StartPositionY = "761";
+
     // game related data
-    static Position c1Position = new Position("1", "561");
-    static Position c2Position = new Position("200", "561");
+    static Position c1Position = new Position(c1StartPositionX, c1StartPositionY);
+    static Position c2Position = new Position(c2StartPositionX, c2StartPositionY);
     public int remainingGameTime = 60;
     public Timer gameTimer;
 
@@ -124,16 +129,10 @@ public class Room {
 
     private String getPositionInformation() {
         String data = ";";
-//
-//        System.out.println("data before " + data);
 
         data += c1Position.toString();
-//        System.out.println("data adter pos 1 " + data);
-//        System.out.println("c1Position.toString() " + c1Position.toString());
         if (c2 != null) {
             data += ";" + c2Position.toString();
-//            System.out.println("data adter pos 2 " + data);
-//            System.out.println("c2Position.toString() " + c2Position.toString());
         }
 
         return data;
@@ -141,16 +140,19 @@ public class Room {
 
     public void updateClientPosition(String clientID, String x, String y) {
         if (c1 != null && c1.getID() == clientID) {
-            System.out.println("update c1");
-            System.out.println("x " + x);
-            System.out.println("y " + x);
             c1Position.setX(x);
             c1Position.setY(y);
         } else if (c2 != null && c2.getID() == clientID) {
-            System.out.println("update c2");
             c2Position.setX(x);
             c2Position.setY(y);
         }
-        System.out.println("fin update");
+    }
+
+    public void resetClientPosition(String clientID) {
+        if (c1 != null && c1.getID() == clientID) {
+            c1Position = new Position(c1StartPositionX, c1StartPositionY);
+        } else if (c2 != null && c2.getID() == clientID) {
+            c2Position = new Position(c2StartPositionX, c2StartPositionY);
+        }
     }
 }

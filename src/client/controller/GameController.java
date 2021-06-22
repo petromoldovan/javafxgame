@@ -53,7 +53,11 @@ public class GameController {
     private static Text timeLeftContainer = null;
     private static int timeLeft;
     //private int frogSize = 39;
+
+    // SIZES
     private static int startPosition = StartClient.HEIGHT - 39;
+    private static int carHeight = 80;
+    private static int carWidth = 80;
 
     private static Player player1;
     private static Player player2;
@@ -83,7 +87,7 @@ public class GameController {
         root.setStyle("-fx-background-image: url('file:"+file.getAbsolutePath()+"');");
 
         // init terrain
-        initRoads(root);
+        initRoads();
 
         frog = initFrog(false);
         root.getChildren().add(frog);
@@ -116,11 +120,23 @@ public class GameController {
         return root;
     }
 
-    private static void initRoads(Pane root) {
-        int x = 0;
-//        while (x < StartClient.WIDTH) {
-//
-//        }
+    private static void initRoads() {
+        int skipped = 0;
+        for (int i = 0; i < 12; i++) {
+            if (i % 2 == 0) {
+                skipped++;
+                continue;
+            }
+
+            Rectangle road = new Rectangle(StartClient.WIDTH, carHeight, Color.RED);
+            Image image = new Image("/client/resources/assets/road.jpeg");
+            road.setFill(new ImagePattern(image));
+
+            // set Y location
+            road.setTranslateY(i * carHeight - skipped * (carHeight/2));
+
+            root.getChildren().add(road);
+        }
     }
 
     private static void onUpdate() {
@@ -196,7 +212,7 @@ public class GameController {
         //14 rows
         int skipped = 0;
         for (int i = 0; i < 12; i++) {
-            Rectangle rect = new Rectangle(80,80, Color.RED);
+            Rectangle rect = new Rectangle(carWidth, carHeight, Color.RED);
             //place car for every second row
             if (i % 2 == 0) {
                 skipped++;
@@ -207,8 +223,8 @@ public class GameController {
             ImagePattern imagePattern = new ImagePattern(image);
             rect.setFill(imagePattern);
 
-            // set location
-            rect.setTranslateY(i * 80 - skipped * (40));
+            // set Y location
+            rect.setTranslateY(i * carHeight - skipped * (carHeight/2));
 
             root.getChildren().add(rect);
             cars.add(rect);

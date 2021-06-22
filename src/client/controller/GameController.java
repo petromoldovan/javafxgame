@@ -145,7 +145,7 @@ public class GameController {
     }
 
     private static void onUpdate() {
-        // update positon of all cars
+        // update position of all cars
         for (Node car : cars)
             car.setTranslateX(car.getTranslateX() + 5);
 
@@ -170,7 +170,14 @@ public class GameController {
         }
 
         // check if the other end is reached
-        if (frog.getTranslateY() <= 10) {
+        checkWinCondition(frog);
+        if (frog2 != null) {
+            checkWinCondition(frog2);
+        }
+    }
+
+    private static boolean checkWinCondition(Node fr) {
+        if (fr.getTranslateY() <= 10) {
             timer.stop();
 
             String win = "YOU WIN";
@@ -190,7 +197,9 @@ public class GameController {
                 ft.setDelay(Duration.seconds(i * 0.15));
                 ft.play();
             }
+            return true;
         }
+        return false;
     }
 
     private static Node initFrog(Boolean isSecond) {
@@ -320,7 +329,7 @@ public class GameController {
                     }
                     if (newY < 0) return;
                     // set new position
-                    StartClient.socketManager.updateGamePosition((int) newX, newY);
+                    StartClient.socketManager.updateGamePosition(newX, newY);
                     break;
                 case S:
                     newX = (int)controlledFrog.getTranslateX();

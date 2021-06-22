@@ -59,6 +59,7 @@ public class GameController {
     private static int timeLeft;
 
     // SIZES
+    private static int frogSize = 38;
     private static int startPosition = StartClient.HEIGHT - 39;
     private static int carHeight = 80;
     private static int carWidth = 80;
@@ -156,9 +157,15 @@ public class GameController {
         for (Node car : cars) {
             if (car.getBoundsInParent().intersects(frog.getBoundsInParent())) {
                 // game over. reset frog
-                //frog.setTranslateX(0);
                 frog.setTranslateX((int)(StartClient.WIDTH/2));
                 frog.setTranslateY(startPosition);
+            }
+            if (frog2 != null) {
+                if (car.getBoundsInParent().intersects(frog2.getBoundsInParent())) {
+                    // game over. reset frog
+                    frog2.setTranslateX((int)(StartClient.WIDTH/2));
+                    frog2.setTranslateY(startPosition + frogSize);
+                }
             }
         }
 
@@ -191,11 +198,10 @@ public class GameController {
         if (isSecond) {
             image = new Image("/client/resources/assets/frog2.png");
         }
-        Rectangle rect = new Rectangle(38,38, Color.TRANSPARENT);
+        Rectangle rect = new Rectangle(frogSize, frogSize, Color.TRANSPARENT);
         rect.setTranslateY(startPosition);
         rect.setTranslateX(40);
-        ImagePattern imagePattern = new ImagePattern(image);
-        rect.setFill(imagePattern);
+        rect.setFill(new ImagePattern(image));
         return rect;
     }
 
@@ -268,8 +274,22 @@ public class GameController {
         frog2.setTranslateY(Integer.parseInt(v));
     }
 
-    private boolean arePlayersColliding() {
-        return true;
+    private static boolean isMultiplayer() {
+        return player2 != null && player1 != null;
+    }
+
+    private static boolean arePlayersColliding(int newX, int newY) {
+        // early exit if there is no other player
+        if (opponentFrog == null) {
+            return false;
+        }
+
+        // create theoretical rect of your next position
+        Rectangle nextPosition = new Rectangle(frogSize, frogSize, Color.TRANSPARENT);
+        nextPosition.setTranslateY(newY);
+        nextPosition.setTranslateX(newX);
+
+        return nextPosition.getBoundsInParent().intersects(opponentFrog.getBoundsInParent());
     }
 
     public static void startGame() throws Exception{
@@ -285,29 +305,53 @@ public class GameController {
             controlledFrog = frog2;
             opponentFrog = frog;
         }
-        //Node finalControlledFrog = controlledFrog;
 
         StartClient.window.getScene().setOnKeyPressed(event -> {
-            double newPosition;
+            int newX;
+            int newY;
             switch (event.getCode()) {
                 case W:
+                    newX = (int)controlledFrog.getTranslateX();
+                    newY = (int)(controlledFrog.getTranslateY() - 40);
+
+                    // return if next step will collide with opponent
+                    if (arePlayersColliding(newX, newY)) {
+                        return;
+                    }
+                    if (newY < 0) return;
                     // set new position
-                    StartClient.socketManager.updateGamePosition((int) controlledFrog.getTranslateX(), (int)(controlledFrog.getTranslateY() - 40));
+                    StartClient.socketManager.updateGamePosition((int) newX, newY);
                     break;
                 case S:
-                    newPosition = controlledFrog.getTranslateY() + 40;
-                    if (newPosition > StartClient.HEIGHT) return;
-                    StartClient.socketManager.updateGamePosition((int)controlledFrog.getTranslateX(), (int)newPosition);
+                    newX = (int)controlledFrog.getTranslateX();
+                    newY = (int)(controlledFrog.getTranslateY() + 40);
+                    // return if next step will collide with opponent
+                    if (arePlayersColliding(newX, newY)) {
+                        return;
+                    }
+
+                    if (newY > StartClient.HEIGHT) return;
+                    StartClient.socketManager.updateGamePosition(newX, newY);
                     break;
                 case A:
-                    newPosition = controlledFrog.getTranslateX() - 40;
-                    if (newPosition < 0) return;
-                    StartClient.socketManager.updateGamePosition((int)newPosition, (int)controlledFrog.getTranslateY());
+                    newX = (int)controlledFrog.getTranslateX() - 40;
+                    newY = (int)(controlledFrog.getTranslateY());
+                    // return if next step will collide with opponent
+                    if (arePlayersColliding(newX, newY)) {
+                        return;
+                    }
+                    if (newX < 0) return;
+                    StartClient.socketManager.updateGamePosition(newX, newY);
                     break;
                 case D:
-                    newPosition = controlledFrog.getTranslateX() + 40;
-                    if (newPosition >= StartClient.WIDTH) return;
-                    StartClient.socketManager.updateGamePosition((int)newPosition, (int)controlledFrog.getTranslateY());
+                    newX = (int)controlledFrog.getTranslateX() + 40;
+                    newY = (int)(controlledFrog.getTranslateY());
+                    // return if next step will collide with opponent
+                    if (arePlayersColliding(newX, newY)) {
+                        return;
+                    }
+                    if (newX >= StartClient.WIDTH) return;
+                    StartClient.socketManager.updateGamePosition(newX, newY);
                     break;
                 default:
                     break;

@@ -48,11 +48,15 @@ public class GameController {
 
     private static Pane root;
     private static List<Node> cars = new ArrayList<>();
+
+    // FROG objects
     private static Node frog;
     private static Node frog2;
+    private static Node controlledFrog;
+    private static Node opponentFrog;
+
     private static Text timeLeftContainer = null;
     private static int timeLeft;
-    //private int frogSize = 39;
 
     // SIZES
     private static int startPosition = StartClient.HEIGHT - 39;
@@ -264,6 +268,10 @@ public class GameController {
         frog2.setTranslateY(Integer.parseInt(v));
     }
 
+    private boolean arePlayersColliding() {
+        return true;
+    }
+
     public static void startGame() throws Exception{
         Scene gameScreen = new Scene(createContent(), StartClient.WIDTH, StartClient.HEIGHT);
 
@@ -271,33 +279,35 @@ public class GameController {
         StartClient.window.setScene(gameScreen);
 
         // set the frog that the client is controlling
-        Node controlledFrog = frog;
+        controlledFrog = frog;
+        opponentFrog = frog2;
         if (!isControllingFirstFrog) {
             controlledFrog = frog2;
+            opponentFrog = frog;
         }
-        Node finalControlledFrog = controlledFrog;
+        //Node finalControlledFrog = controlledFrog;
 
         StartClient.window.getScene().setOnKeyPressed(event -> {
             double newPosition;
             switch (event.getCode()) {
                 case W:
                     // set new position
-                    StartClient.socketManager.updateGamePosition((int) finalControlledFrog.getTranslateX(), (int)(finalControlledFrog.getTranslateY() - 40));
+                    StartClient.socketManager.updateGamePosition((int) controlledFrog.getTranslateX(), (int)(controlledFrog.getTranslateY() - 40));
                     break;
                 case S:
-                    newPosition = finalControlledFrog.getTranslateY() + 40;
+                    newPosition = controlledFrog.getTranslateY() + 40;
                     if (newPosition > StartClient.HEIGHT) return;
-                    StartClient.socketManager.updateGamePosition((int)finalControlledFrog.getTranslateX(), (int)newPosition);
+                    StartClient.socketManager.updateGamePosition((int)controlledFrog.getTranslateX(), (int)newPosition);
                     break;
                 case A:
-                    newPosition = finalControlledFrog.getTranslateX() - 40;
+                    newPosition = controlledFrog.getTranslateX() - 40;
                     if (newPosition < 0) return;
-                    StartClient.socketManager.updateGamePosition((int)newPosition, (int)finalControlledFrog.getTranslateY());
+                    StartClient.socketManager.updateGamePosition((int)newPosition, (int)controlledFrog.getTranslateY());
                     break;
                 case D:
-                    newPosition = finalControlledFrog.getTranslateX() + 40;
+                    newPosition = controlledFrog.getTranslateX() + 40;
                     if (newPosition >= StartClient.WIDTH) return;
-                    StartClient.socketManager.updateGamePosition((int)newPosition, (int)finalControlledFrog.getTranslateY());
+                    StartClient.socketManager.updateGamePosition((int)newPosition, (int)controlledFrog.getTranslateY());
                     break;
                 default:
                     break;

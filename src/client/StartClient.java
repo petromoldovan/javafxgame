@@ -14,7 +14,7 @@ public class StartClient extends Application {
     public static Scene rootScreen;
 
     public static int WIDTH = 800;
-    public static int HEIGHT = 600;
+    public static int HEIGHT = 800;
 
     public static SocketManager socketManager;
 

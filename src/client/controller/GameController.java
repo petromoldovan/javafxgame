@@ -72,12 +72,18 @@ public class GameController {
         isControllingFirstFrog = b;
     }
 
+    private static File carIcon1 = new File("src/client/resources/assets/car.png");
+
     private static Parent createContent() {
         root = new Pane();
         root.setPrefSize(StartClient.WIDTH, StartClient.HEIGHT);
-  
+
+        // textures
         File file = new File("src/client/resources/assets/sand.jpeg");
         root.setStyle("-fx-background-image: url('file:"+file.getAbsolutePath()+"');");
+
+        // init terrain
+        initRoads(root);
 
         frog = initFrog(false);
         root.getChildren().add(frog);
@@ -87,29 +93,40 @@ public class GameController {
             root.getChildren().add(frog2);
         }
 
-        Node t = initTimeLeftContainer();
-        root.getChildren().add(t);
+        Node clockContainer = initTimeLeftContainer();
+        root.getChildren().add(clockContainer);
 
-        timer = new AnimationTimer() {
-            @Override
-            public void handle(long now) {
-                onUpdate();
+        Runnable runnable = () -> {
+            try {
+                timer = new AnimationTimer() {
+                    @Override
+                    public void handle(long now) {
+                        onUpdate();
+                    }
+                };
+                timer.start();
+            }
+            catch (Exception e) {
+                e.printStackTrace();
             }
         };
-        timer.start();
+        Thread updateThread = new Thread(runnable);
+        updateThread.start();
 
         return root;
+    }
+
+    private static void initRoads(Pane root) {
+        int x = 0;
+//        while (x < StartClient.WIDTH) {
+//
+//        }
     }
 
     private static void onUpdate() {
         // update positon of all cars
         for (Node car : cars)
-            car.setTranslateX(car.getTranslateX() + Math.random() * 10);
-
-        // add a car
-        if (Math.random() < 0.08) {
-            cars.add(initCar());
-        }
+            car.setTranslateX(car.getTranslateX() + 5);
 
         // check for collision
         checkState();
@@ -175,12 +192,29 @@ public class GameController {
         return hBox;
     }
 
-    private static Node initCar() {
-        Rectangle rect = new Rectangle(40,40, Color.RED);
+    private static void initCar() {
         //14 rows
-        rect.setTranslateY((int)(Math.random() * 14) * 40);
-        root.getChildren().add(rect);
-        return rect;
+        int skipped = 0;
+        for (int i = 0; i < 12; i++) {
+            Rectangle rect = new Rectangle(80,80, Color.RED);
+            //place car for every second row
+            if (i % 2 == 0) {
+                skipped++;
+                continue;
+            }
+
+            Image image = new Image("/client/resources/assets/car.png");
+            ImagePattern imagePattern = new ImagePattern(image);
+            rect.setFill(imagePattern);
+
+            // set location
+            rect.setTranslateY(i * 80 - skipped * (40));
+
+            root.getChildren().add(rect);
+            cars.add(rect);
+        }
+
+        return;
     }
 
     public static void setTimeLeft(int v) {
@@ -188,6 +222,15 @@ public class GameController {
             return;
         }
         if (timeLeftContainer != null) {
+            // create cars only when needed
+            if (timeLeft != v) {
+                if (v %3 == 0) {
+                    initCar();
+                }
+
+                timeLeft = v;
+            }
+
             timeLeftContainer.setText(String.valueOf(v));
         }
     }

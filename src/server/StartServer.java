@@ -55,13 +55,13 @@ public class StartServer {
                     // execute runnable object
                     executor.execute(client);
                 } catch (IOException e) {
-                    System.out.println("ERROR: StartServer#mainLoop#" + e.getMessage());
+                    e.printStackTrace();
                 }
             }
 
 
         } catch (IOException e) {
-            System.out.println("ERROR: StartServer#" + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

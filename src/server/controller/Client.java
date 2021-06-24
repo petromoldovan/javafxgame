@@ -1,5 +1,8 @@
 package server.controller;
 
+import client.model.Score;
+import client.model.Scores;
+import com.google.gson.Gson;
 import common.constants.ActionTypes;
 import server.StartServer;
 
@@ -8,15 +11,20 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class Client implements Runnable {
+    
+    private final Gson gson = new Gson();
+    
     Socket socket;
     DataInputStream dataInputStream;
     DataOutputStream dataOutputStream;
 
     private boolean isLookingForMatch = false;
-    private String clientID = "";
+    private String clientID;
     private String username = "";
 
     public Client(Socket socket) throws IOException {
@@ -55,6 +63,9 @@ public class Client implements Runnable {
 //                    case GAME_EVENT_WIN:
 //                        onGameTimeoutRequest(messageFromClient);
 //                        break;
+                    case SCORES:
+                        onScores(messageFromClient);
+                        break;
                     case INVALID:
                         System.out.println("ERROR: invalid type " + type);
                         break;
@@ -63,10 +74,26 @@ public class Client implements Runnable {
                 }
 
             } catch (IOException e) {
-                System.out.println("ERROR: Client#run" + e.getMessage());
+                e.printStackTrace();
                 break;
             }
         }
+    }
+
+    private void onScores(final String message) {
+        final List<Score> list = new ArrayList<>();
+        for (int i = 0; i < 100; i++) {
+            list.add(new Score("Sam", (int) (i * Math.random())));
+            list.add(new Score("Joe", (int) (i * Math.random())));
+            list.add(new Score("John", (int) (i * Math.random())));
+        }
+        final String action = getActionPart(message);
+        final Scores scores = new Scores(list); //todo database
+        sendDataToClient(action + gson.toJson(scores));
+    }
+
+    private String getActionPart(final String message) {
+        return message.split(";")[0] + ";";
     }
 
     public String sendDataToClient(String data) {
@@ -75,19 +102,17 @@ public class Client implements Runnable {
             this.dataOutputStream.writeUTF(data);
             return "SUCCESS";
         } catch (IOException e) {
-            System.out.println("ERROR: Client#sendData" + e.getMessage());
+            e.printStackTrace();
             return "FAILURE";
         }
     }
 
     private void onLoginUser(String message) {
         String[] splitted = message.split(";");
-        String username = splitted[1];
-
         // TODO: login check
 
         // save user id
-        this.username = username;
+        this.username = splitted[1];
 
         // send user data to
         sendDataToClient(ActionTypes.ActionType.LOGIN_USER.name() + ";" + ActionTypes.Code.SUCCESS.name() + ";" + this.clientID);

@@ -13,7 +13,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox alignment="TOP_CENTER" spacing="10.0" styleClass="loginclass" stylesheets="@assets/main.css" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.LoginController">
+<VBox alignment="TOP_CENTER" spacing="10.0" stylesheets="@assets/main.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.LoginController">
     <padding>
         <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
     </padding>
@@ -46,7 +46,7 @@
         <VBox.margin>
             <Insets />
         </VBox.margin>
-        <Button mnemonicParsing="false" onAction="#login" text="Login" />
+        <Button fx:id="login" mnemonicParsing="false" onAction="#login" text="Login" />
         <Button fx:id="cancel" mnemonicParsing="false" onAction="#cancel" text="Back" />
     </HBox>
 </VBox>

@@ -1,4 +1,4 @@
-package client.model;
+package network.entity;
 
 public class Score {
     

@@ -1,10 +1,11 @@
-package client.network;
+package client.game;
 
 import client.StartClient;
 import client.controller.GameController;
-import client.controller.LoginController;
-import client.model.Player;
-import client.model.Scores;
+import network.entity.LoginResponse;
+import client.game.model.Player;
+import network.entity.RegistrationResponse;
+import network.entity.Scores;
 import client.screen.AppScreen;
 import com.google.gson.Gson;
 import common.constants.ActionTypes;
@@ -19,7 +20,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 public class SocketManager {
     
@@ -33,6 +33,7 @@ public class SocketManager {
     Thread listener = null;
     String roomID = null;
     String clientID = null;
+    private Class<?> controller;
 
     public void connect(String host, int port) throws IOException {
         try {
@@ -78,6 +79,9 @@ public class SocketManager {
                     case SCORES:
                         onScoresResponse(messageFromServer);
                         break;
+                    case REGISTER_USER:
+                        onRegisterUser(messageFromServer);
+                        break;
                     case INVALID:
                         System.out.println("ERROR: invalid type " + type);
                         break;
@@ -90,13 +94,23 @@ public class SocketManager {
         }
     }
 
+    private void onRegisterUser(final String message) {
+        onResponse(message, ActionTypes.ActionType.REGISTER_USER, RegistrationResponse.class);
+    }
+
     private void onScoresResponse(final String message) {
+        onResponse(message, ActionTypes.ActionType.SCORES, Scores.class);
+    }
+
+    private <T> T onResponse(final String message, final ActionTypes.ActionType type, final Class<T> aClass) {
         String json = getJson(message);
-        Scores scores = gson.fromJson(json, Scores.class);
-        data.put(ActionTypes.ActionType.SCORES, scores);
-        synchronized (ActionTypes.ActionType.SCORES) {
-            ActionTypes.ActionType.SCORES.notifyAll();
+        final T result = gson.fromJson(json, aClass);
+        data.put(type, result);
+        synchronized (type) {
+            type.notifyAll();
         }
+        System.out.println("response " + type + " " + json);
+        return result;
     }
 
     private String getJson(final String message) {
@@ -116,9 +130,10 @@ public class SocketManager {
 
     // Requests to server
 
-    public void login(String username, String password) {
-        String payload = ActionTypes.ActionType.LOGIN_USER + ";" + username + ";" + password;
-        sendDataToServer(payload);
+    public void login(String username, String password, Class<?> from, RunnableWithResult<LoginResponse> runnable) {
+        validate(username, password);
+        setFrom(from);
+        sendRequest(runnable, ActionTypes.ActionType.LOGIN_USER, username, password);
     }
 
     public void findMatch() {
@@ -147,19 +162,13 @@ public class SocketManager {
         this.roomID = "";
     }
 
+
     // Responses from server
-
     private void onLoginUserResponse(String message) {
-        String[] splitted = message.split(";");
-        String status = splitted[1];
-
-        if (status.equalsIgnoreCase(ActionTypes.Code.SUCCESS.name())) {
-            // set client id
-            this.clientID = splitted[2];
-
-            AppScreen.DASHBOARD.goFrom(LoginController.class);
-        } else {
-            System.out.println("ERROR: onLoginUserResponse# login fail");
+        final LoginResponse response = onResponse(message, ActionTypes.ActionType.LOGIN_USER, LoginResponse.class);
+        if (response.getCode() == ActionTypes.Code.SUCCESS) {
+            this.clientID = response.getUid();
+            AppScreen.DASHBOARD.goFrom(controller);
         }
     }
 
@@ -242,23 +251,59 @@ public class SocketManager {
 
         return message;
     }
-    
+
     public void showScores(RunnableWithResult<Scores> runnable) {
+        sendRequest(runnable, ActionTypes.ActionType.SCORES);
+    }
+
+    public void registerUser(String username, String password, RunnableWithResult<RegistrationResponse> runnable) {
+        validate(username, password);
+        sendRequest(runnable, ActionTypes.ActionType.REGISTER_USER, username, password);
+    }
+
+    private void validate(final String username, final String password) {
+        if (null == username || username.isBlank()) {
+            throw new IllegalArgumentException("Incorrect username!");
+        }
+        if (null == password || password.isBlank()) {
+            throw new IllegalArgumentException("Incorrect password!");
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> void sendRequest(final RunnableWithResult<T> runnable, final ActionTypes.ActionType actionType, String... requestData) {
         pool.submit(() -> {
             try {
-                final ActionTypes.ActionType scores = ActionTypes.ActionType.SCORES;
-                sendDataToServer(scores + ";");
-                synchronized (ActionTypes.ActionType.SCORES) {
-                    scores.wait();
+                final String request = createRequest(actionType, requestData);
+                sendDataToServer(request);
+                synchronized (actionType) {
+                    actionType.wait();
                 }
-                runnable.execute((Scores) data.get(scores));
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                final T result = (T) this.data.get(actionType);
+                runnable.execute(result);
+            } catch (Throwable t) {
+                t.printStackTrace();
             }
         });
     }
+
+    private String createRequest(final ActionTypes.ActionType actionType, final String[] data) {
+        StringBuilder sb = new StringBuilder(actionType.name());
+        sb.append(';');
+        if (data != null) {
+            for (String s : data) {
+                sb.append(s).append(';');
+            }
+        }
+        return sb.toString();
+    }
+
+    private void setFrom(final Class<?> from) {
+        controller = from;
+    }
     
     public interface RunnableWithResult<T> {
+
         void execute(T data);
     }
 }

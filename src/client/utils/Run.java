@@ -8,6 +8,10 @@ import java.util.Optional;
 public final class Run {
     
     public static Optional<Throwable> safe(UnsafeTask task) {
+        return safe(task, () -> {});
+    }    
+    
+    public static Optional<Throwable> safe(UnsafeTask task, Runnable onError) {
         try {
             task.execute();
             return Optional.empty();
@@ -20,6 +24,7 @@ public final class Run {
                 alert.setContentText(t.getMessage());
                 alert.showAndWait();
             });
+            onError.run();
             return Optional.of(t);
         }
     }

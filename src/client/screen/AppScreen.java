@@ -76,6 +76,7 @@ public enum AppScreen {
             final AppScreen screen = CONTROLLER_MAP.get(controller);
             final Stage stage = (screen == null) ? null : screen.getStage();
             NAVIGATION.show(this, stage);
+            System.out.println("Go to " + this + " from " + screen);
         });
     }
     

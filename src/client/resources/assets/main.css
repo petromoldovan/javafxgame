@@ -15,7 +15,6 @@
     /*  base colors */
     -fx-base: fg-color;
     -fx-background: bg-color;
-
     /*-fx-control-inner-background: bg-color-light;*/
     /*-fx-accent: bg-color-selected;*/
     /*-fx-focus-color: fg-color;*/
@@ -26,9 +25,6 @@
     /* font */
     /*-fx-font-family: "Helvetica";*/
     /*bold: 800;*/
-}
-.loginclass{
-    -fx-background-image:url('file:/assets/sand.jpeg');
 }
 
 .title {

@@ -1,18 +1,18 @@
 package server.controller;
 
-import client.model.Score;
-import client.model.Scores;
+import network.entity.LoginResponse;
+import network.entity.RegistrationResponse;
+import network.entity.Scores;
 import com.google.gson.Gson;
 import common.constants.ActionTypes;
 import server.StartServer;
+import server.logic.Server;
 
-import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public class Client implements Runnable {
@@ -66,6 +66,9 @@ public class Client implements Runnable {
                     case SCORES:
                         onScores(messageFromClient);
                         break;
+                    case REGISTER_USER:
+                        onRegisterUser(messageFromClient);
+                        break;
                     case INVALID:
                         System.out.println("ERROR: invalid type " + type);
                         break;
@@ -80,15 +83,27 @@ public class Client implements Runnable {
         }
     }
 
-    private void onScores(final String message) {
-        final List<Score> list = new ArrayList<>();
-        for (int i = 0; i < 100; i++) {
-            list.add(new Score("Sam", (int) (i * Math.random())));
-            list.add(new Score("Joe", (int) (i * Math.random())));
-            list.add(new Score("John", (int) (i * Math.random())));
-        }
+    private void onRegisterUser(final String message) {
         final String action = getActionPart(message);
-        final Scores scores = new Scores(list); //todo database
+        String[] data = message.split(";");
+        if (data.length < 3) {
+            final String err = "Error registering user: no username or password!";
+            System.err.println(err);
+            RegistrationResponse response = new RegistrationResponse(ActionTypes.Code.ERROR, err);
+            sendDataToClient(action + gson.toJson(response));
+            return;
+        }
+        String username = data[1];
+        String password = data[2];
+        final Optional<String> result = Server.getLogic().register(username, password);
+        final ActionTypes.Code code = result.isEmpty() ? ActionTypes.Code.SUCCESS : ActionTypes.Code.ERROR;
+        RegistrationResponse response = new RegistrationResponse(code, result.orElse(""));
+        sendDataToClient(action + gson.toJson(response));
+    }
+
+    private void onScores(final String message) {
+        final String action = getActionPart(message);
+        final Scores scores = Server.getLogic().getScores();
         sendDataToClient(action + gson.toJson(scores));
     }
 
@@ -108,14 +123,21 @@ public class Client implements Runnable {
     }
 
     private void onLoginUser(String message) {
-        String[] splitted = message.split(";");
-        // TODO: login check
-
-        // save user id
-        this.username = splitted[1];
-
-        // send user data to
-        sendDataToClient(ActionTypes.ActionType.LOGIN_USER.name() + ";" + ActionTypes.Code.SUCCESS.name() + ";" + this.clientID);
+        final String action = getActionPart(message);
+        String[] request = message.split(";");
+        if (request.length < 3) {
+            String err = "Error login in: no login supplied!";
+            System.err.println(err);
+            LoginResponse response = new LoginResponse(ActionTypes.Code.ERROR, err, clientID);
+            sendDataToClient(action + gson.toJson(response));
+            return;
+        }
+        username = request[1];
+        String password = request[2];
+        final Optional<String> err = Server.getLogic().login(username, password);
+        final ActionTypes.Code code = err.isEmpty() ? ActionTypes.Code.SUCCESS : ActionTypes.Code.ERROR;
+        final LoginResponse response = new LoginResponse(code, err.orElse(""), clientID);
+        sendDataToClient(action + gson.toJson(response));
     }
 
     private void onFindMatchRequest() {

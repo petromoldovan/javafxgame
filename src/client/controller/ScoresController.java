@@ -1,7 +1,7 @@
 package client.controller;
 
 import client.StartClient;
-import client.model.Score;
+import network.entity.Score;
 import client.screen.AppScreen;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;

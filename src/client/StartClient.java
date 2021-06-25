@@ -1,7 +1,7 @@
 package client;
 
 import client.controller.GameController;
-import client.network.SocketManager;
+import client.game.SocketManager;
 import client.screen.AppScreen;
 import javafx.application.Application;
 import javafx.stage.Stage;

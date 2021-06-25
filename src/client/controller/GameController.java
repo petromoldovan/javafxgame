@@ -1,7 +1,8 @@
 package client.controller;
 
 import client.StartClient;
-import client.model.Player;
+import client.game.model.Car;
+import client.game.model.Player;
 import client.screen.AppScreen;
 import javafx.animation.AnimationTimer;
 import javafx.geometry.Insets;
@@ -38,7 +39,7 @@ public class GameController {
     private static AnimationTimer timer;
 
     private static Pane root;
-    private static List<Node> cars = new ArrayList<>();
+    private static List<Car> cars = new ArrayList<>();
 
     // FROG objects
     private static Node frog;
@@ -135,7 +136,7 @@ public class GameController {
             road.setFill(new ImagePattern(image));
 
             // set Y location
-            road.setTranslateY(i * carHeight - skipped * (carHeight/2));
+            road.setTranslateY(i * carHeight - skipped * (carHeight/2.0));
 
             root.getChildren().add(road);
         }
@@ -143,9 +144,10 @@ public class GameController {
 
     private static void onUpdate() {
         // update position of all cars
-        for (Node car : cars)
+        for (Node car : cars) {
             car.setTranslateX(car.getTranslateX() + 5);
-
+        }
+            
         // check for collision
         checkState();
     }
@@ -203,7 +205,7 @@ public class GameController {
         //14 rows
         int skipped = 0;
         for (int i = 0; i < 12; i++) {
-            Rectangle rect = new Rectangle(carWidth, carHeight, Color.RED);
+            Car car = new Car(carWidth, carHeight, Color.RED);
             //place car for every second row
             if (i % 2 == 0) {
                 skipped++;
@@ -212,13 +214,13 @@ public class GameController {
 
             Image image = new Image("/client/resources/assets/car.png");
             ImagePattern imagePattern = new ImagePattern(image);
-            rect.setFill(imagePattern);
+            car.setFill(imagePattern);
 
             // set Y location
-            rect.setTranslateY(i * carHeight - skipped * (carHeight/2));
+            car.setTranslateY(i * carHeight - skipped * (carHeight/2.0));
 
-            root.getChildren().add(rect);
-            cars.add(rect);
+            root.getChildren().add(car);
+            cars.add(car);
         }
     }
 
@@ -285,7 +287,7 @@ public class GameController {
         return nextPosition.getBoundsInParent().intersects(opponentFrog.getBoundsInParent());
     }
 
-    public static void startGame() throws Exception{
+    public static void startGame() {
         Scene gameScreen = new Scene(createContent(), WIDTH, HEIGHT);
 
         // render registration scene

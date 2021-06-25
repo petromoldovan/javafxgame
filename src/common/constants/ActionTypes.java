@@ -9,6 +9,7 @@ public class ActionTypes {
     public enum ActionType {
         INVALID,
         LOGIN_USER,
+        REGISTER_USER,
         FIND_MATCH,
         JOIN_ROOM,
         CURRENT_GAME_DATA_RESPONSE,

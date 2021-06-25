@@ -34,11 +34,6 @@
          <Font name="Lato Black" size="18.0" />
       </font>
    </Button>
-    <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#showProfile" text="Profile">
-        <font>
-          <Font name="Lato Black" size="18.0" />
-        </font>
-    </Button>
    <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#exit" text="Exit">
       <font>
          <Font name="Lato Black" size="18.0" />

@@ -1,4 +1,4 @@
-package client.model;
+package network.entity;
 
 import java.util.List;
 

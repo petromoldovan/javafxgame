@@ -9,17 +9,10 @@ import javafx.stage.Stage;
 public class StartClient extends Application {
 
     private static SocketManager socketManager;
+    private static GameController gameScreenController;
 
     public static void main(String[] args) {
         launch(args);
-    }
-
-
-    // GameController instance
-    public static GameController gameScreenController;
-
-    public static SocketManager getSocketManager() {
-        return socketManager;
     }
 
     @Override
@@ -27,5 +20,13 @@ public class StartClient extends Application {
         socketManager = new SocketManager();
         gameScreenController = new GameController();
         AppScreen.SERVER_CONNECTION.goFrom(null);
+    }
+
+    public static SocketManager getSocketManager() {
+        return socketManager;
+    }
+
+    public static GameController getGameController() {
+        return gameScreenController;
     }
 }

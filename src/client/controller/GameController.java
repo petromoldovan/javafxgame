@@ -1,32 +1,157 @@
 package client.controller;
 
 import client.StartClient;
+import client.game.SocketManager;
 import client.game.model.Car;
+import client.game.model.Frog;
 import client.game.model.Player;
 import client.screen.AppScreen;
-import javafx.animation.AnimationTimer;
+import common.constants.Constants;
+import javafx.animation.FadeTransition;
+import javafx.application.Platform;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.image.Image;
-import javafx.scene.layout.*;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.util.Duration;
+import network.entity.StateChange;
+import network.entity.enums.FrogMove;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import static common.constants.Constants.FROG_LIVES;
+import static common.constants.Constants.GAME_TIME;
+import static common.constants.Constants.HEIGHT;
+import static common.constants.Constants.LIVE_HEIGHT;
+import static common.constants.Constants.LIVE_WIDTH;
+import static common.constants.Constants.UNIT_SIZE;
+import static common.constants.Constants.WIDTH;
 
 public class GameController {
-    
-    public static int WIDTH = 800;
-    public static int HEIGHT = 800;
-    private static Stage stage;
+
+    private Stage stage;
+    private final Frog[] frogs = new Frog[] {null, null};
+    private final Map<Integer, Car> carMap = new HashMap<>();
+    private final SocketManager socketManager = StartClient.getSocketManager();
+    private Pane root;
+    private final DoubleProperty timeLeft = new SimpleDoubleProperty(GAME_TIME);
+    private HBox rightLives;
+    private HBox leftLives;
+    private volatile boolean moving = false;
+
+    public static void setPlayer1(Player p) {
+    }
+    public static void setPlayer2(Player p) {
+    }
+    public static void isControllingFirstFrog(boolean b) {
+    }
+
+    public void onChangeState(final StateChange change) {
+        Platform.runLater(() -> onChange(change));
+    }
+
+    private void onChange(final StateChange change) {
+        if (!change.getFrogs().isEmpty()) System.out.println(change.getFrogs());
+        change.getFrogs().forEach(each -> {
+            int i = each.isFirst() ? 0 : 1;
+            final double x = each.getX();
+            final double y = each.getY();
+            Frog frog = frogs[i];
+            if (null == frog) {
+                frog = new Frog(each.isFirst(), UNIT_SIZE, UNIT_SIZE);
+                frogs[i] = frog;
+                root.getChildren().add(frog);
+                frog.reset(x, y);
+            } else {
+                if (each.isDead()) {
+                    updateLives(each, change);
+                    frog.setDead();
+                } else {
+                    if (frog.isDead()) {
+                        frog.setAlive();
+                        frog.reset(x, y);
+                    } else {
+                        frog.move(x, y);
+                        moving = true;
+                        new Timer().schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                                moving = false;
+                            }
+                        }, Constants.FROG_MOVE_TIME);
+                    }
+                }
+            }
+        });
+        change.getCars().forEach(each -> {
+            final int id = each.getId();
+            final double x = each.getX();
+            final double y = each.getY();
+            Car car = carMap.get(id);
+            if (car == null) {
+                car = new Car(UNIT_SIZE, (int) (UNIT_SIZE * 0.7));
+                root.getChildren().add(car);
+                carMap.put(id, car);
+                car.set(x, y);
+                car.draw();
+            } else {
+                car.move(x, y);
+            }
+        });
+        if (change.hasTime()) setTimeLeft(change.getTime());
+    }
+
+    private void updateLives(final network.model.Frog each, final StateChange change) {
+        HBox hBox;
+        int index;
+        if (each.isFirst()) {
+            hBox = leftLives;
+            index = Constants.FROG_LIVES - change.getFrog1deaths();
+        } else {
+            hBox = rightLives;
+            index = change.getFrog2deaths() - 1;
+        }
+        hBox.getChildren().remove(index);
+        hBox.getChildren().add(index, newEmptyLive());
+    }
+
+    private Node newEmptyLive() {
+        Rectangle rectangle = new Rectangle(LIVE_WIDTH, LIVE_HEIGHT);
+        rectangle.setFill(new ImagePattern(new Image("/client/resources/assets/liveEmpty.png")));
+        return rectangle;
+    }
+
+    public void onWinEvent() {
+        showGameOverMessage(true);
+        socketManager.stop();
+    }
+
+    public void onLoseEvent() {
+        showGameOverMessage(false);
+        socketManager.stop();
+    }
+
+    public void onTimeout() {
+        showMessage("TIME IS OUT!");
+    }
 
     public void show() {
         Scene scene = new Scene(new Pane(), WIDTH, HEIGHT);
@@ -35,322 +160,111 @@ public class GameController {
         stage.show();
         AppScreen.hide();
     }
-
-    private static AnimationTimer timer;
-
-    private static Pane root;
-    private static List<Car> cars = new ArrayList<>();
-
-    // FROG objects
-    private static Node frog;
-    private static Node frog2;
-    private static Node controlledFrog;
-    private static Node opponentFrog;
-
-    private static Text timeLeftContainer = null;
-    private static int timeLeft;
-
-    // SIZES
-    private static int frogSize = 38;
-    private static int startPosition = HEIGHT - 39;
-    private static int carHeight = 80;
-    private static int carWidth = 80;
-
-    private static Player player1;
-    private static Player player2;
-    private static boolean isControllingFirstFrog;
-
-    private static int x1;
-    private static int y1;
-
-    public static void setPlayer1(Player p) {
-        player1 = p;
-    }
-    public static void setPlayer2(Player p) {
-        player2 = p;
-    }
-    public static void isControllingFirstFrog(boolean b) {
-        isControllingFirstFrog = b;
-    }
-
-    private static File carIcon1 = new File("src/client/resources/assets/car.png");
-
-    private static Parent createContent() {
+    
+    private Parent createContent() {
         root = new Pane();
-//        try {
-//            root = FXMLLoader.load(GameController.class.getResource("/client/resources/playground.fxml"));
-//        } catch (Exception e) {
-//            // noop
-//        }
-
         root.setPrefSize(WIDTH, HEIGHT);
+        
+        Rectangle road = new Rectangle(WIDTH, HEIGHT, Color.WHITE);
+        road.setFill(new ImagePattern(new Image("/client/resources/assets/road.png")));
+        root.getChildren().add(road);        
+        
+        ProgressBar time = new ProgressBar(1);
+        time.progressProperty().bindBidirectional(timeLeft);
+        
+        BorderPane pane = new BorderPane();
+        pane.setPrefWidth(WIDTH);
+        pane.setPadding(new Insets(10));
+        pane.setCenter(time);
 
-        // textures
-        File file = new File("src/client/resources/assets/sand.jpeg");
-        root.setStyle("-fx-background-image: url('file:"+file.getAbsolutePath()+"');");
+        leftLives = new HBox(newLives("/client/resources/assets/live.png"));
+        leftLives.setPrefWidth(LIVE_WIDTH);
+        pane.setLeft(leftLives);
 
-        // init terrain
-        initRoads();
-
-        frog = initFrog(false);
-        root.getChildren().add(frog);
-
-        if (player2 != null) {
-            frog2 = initFrog(true);
-            root.getChildren().add(frog2);
-        }
-
-        Node clockContainer = initTimeLeftContainer();
-        root.getChildren().add(clockContainer);
-
-        Runnable runnable = () -> {
-            try {
-                timer = new AnimationTimer() {
-                    @Override
-                    public void handle(long now) {
-                        onUpdate();
-                    }
-                };
-                timer.start();
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-        };
-        Thread updateThread = new Thread(runnable);
-        updateThread.start();
+        rightLives = new HBox(newLives("/client/resources/assets/live2.png"));
+        rightLives.setPrefWidth(LIVE_WIDTH);
+        pane.setRight(rightLives);
+        
+        root.getChildren().add(pane);
 
         return root;
     }
 
-    private static void initRoads() {
-        int skipped = 0;
-        for (int i = 0; i < 12; i++) {
-            if (i % 2 == 0) {
-                skipped++;
-                continue;
-            }
-
-            Rectangle road = new Rectangle(WIDTH, carHeight, Color.RED);
-            Image image = new Image("/client/resources/assets/road.jpeg");
-            road.setFill(new ImagePattern(image));
-
-            // set Y location
-            road.setTranslateY(i * carHeight - skipped * (carHeight/2.0));
-
-            root.getChildren().add(road);
+    private Rectangle[] newLives(final String image) {
+        final Rectangle[] result = new Rectangle[FROG_LIVES];
+        for (int i = 0; i < result.length; i++) {
+            Rectangle rectangle = new Rectangle(LIVE_WIDTH, LIVE_HEIGHT);
+            rectangle.setFill(new ImagePattern(new Image(image)));
+            result[i] = rectangle;
         }
+        return result;
     }
 
-    private static void onUpdate() {
-        // update position of all cars
-        for (Node car : cars) {
-            car.setTranslateX(car.getTranslateX() + 5);
-        }
+    public void showGameOverMessage(boolean win) {
+        String message = win ? "YOU WIN!" : "YOU LOSE!";
+        showMessage(message);
+    }
+    
+    public void showMessage(String message) {
+        Platform.runLater(() -> {
+            HBox hBox = new HBox();
+            hBox.setTranslateX( (WIDTH / 2d) - 130 );
+            hBox.setTranslateY( (HEIGHT / 2d) - 25 );
+            final VBox vBox = new VBox(hBox);
+            vBox.setAlignment(Pos.CENTER);
+            vBox.setPrefWidth(WIDTH);
+            root.getChildren().add(vBox);
             
-        // check for collision
-        checkState();
-    }
-
-    private static void checkState() {
-        for (Node car : cars) {
-            if (car.getBoundsInParent().intersects(controlledFrog.getBoundsInParent())) {
-                // reset frog position
-                StartClient.getSocketManager().resetGamePosition();
+            for (int i = 0; i < message.length(); i++) {
+                char letter = message.charAt(i);
+                Text text = new Text(String.valueOf(letter));
+                text.setFont(Font.font(50));
+                text.setOpacity(0);
+                text.setStyle("-fx-dark-text-color: red;");
+                hBox.getChildren().add(text);
+                FadeTransition ft = new FadeTransition(Duration.seconds(0.66), text);
+                ft.setToValue(1);
+                ft.setDelay(Duration.seconds(i * 0.15));
+                ft.play();
             }
-        }
-
-        // check if the other end is reached
-        checkWinCondition(frog);
-        if (frog2 != null) {
-            checkWinCondition(frog2);
-        }
+        });
     }
 
-    private static boolean checkWinCondition(Node fr) {
-        if (fr.getTranslateY() <= 10) {
-            timer.stop();
-            showGameOverMessage(false);
-            return true;
-        }
-        return false;
+    public void setTimeLeft(int time) {
+        double progress = (double)time / GAME_TIME;
+        Platform.runLater(() -> {
+//            System.out.printf("time=%d, progress=%f\n", time, progress);
+            timeLeft.setValue(progress);
+        });
     }
 
-    private static Node initFrog(Boolean isSecond) {
-        Image image = new Image("/client/resources/assets/frog.png");
-        if (isSecond) {
-            image = new Image("/client/resources/assets/frog2.png");
-        }
-        Rectangle rect = new Rectangle(frogSize, frogSize, Color.TRANSPARENT);
-        rect.setTranslateY(startPosition);
-        rect.setTranslateX(40);
-        rect.setFill(new ImagePattern(image));
-        return rect;
-    }
-
-    private static Node initTimeLeftContainer() {
-        HBox hBox = new HBox();
-        hBox.setTranslateX(10);
-        hBox.setTranslateY(10);
-        hBox.setBackground(new Background(new BackgroundFill(Color.LIGHTBLUE, CornerRadii.EMPTY, Insets.EMPTY)));
-
-        timeLeftContainer = new Text(String.valueOf(timeLeft));
-
-        timeLeftContainer.setFont(Font.font(30));
-        hBox.getChildren().add(timeLeftContainer);
-        return hBox;
-    }
-
-    private static void initCar() {
-        //14 rows
-        int skipped = 0;
-        for (int i = 0; i < 12; i++) {
-            Car car = new Car(carWidth, carHeight, Color.RED);
-            //place car for every second row
-            if (i % 2 == 0) {
-                skipped++;
-                continue;
-            }
-
-            Image image = new Image("/client/resources/assets/car.png");
-            ImagePattern imagePattern = new ImagePattern(image);
-            car.setFill(imagePattern);
-
-            // set Y location
-            car.setTranslateY(i * carHeight - skipped * (carHeight/2.0));
-
-            root.getChildren().add(car);
-            cars.add(car);
-        }
-    }
-
-    public static void showGameOverMessage(boolean isTimeout) {
-        Text text = new Text("YOU WIN");
-        if (isTimeout) {
-            text = new Text("Time is UP");
-        }
-        HBox hBox = new HBox();
-        hBox.setTranslateX(300);
-        hBox.setTranslateY(250);
-        root.getChildren().add(hBox);
-        text.setFont(Font.font(50));
-        hBox.getChildren().add(text);
-    }
-
-    public static void setTimeLeft(int v) {
-        if (v < 0) {
-            return;
-        }
-        if (timeLeftContainer != null) {
-            // create cars only when needed
-            if (timeLeft != v) {
-                if (v %3 == 0) {
-                    initCar();
-                }
-
-                timeLeft = v;
-            }
-
-            timeLeftContainer.setText(String.valueOf(v));
-        }
-
-        if (v == 0) {
-            showGameOverMessage(true);
-            StartClient.getSocketManager().onGameTimeoutRequest();
-        }
-    }
-    public static void setX1(String v) {
-        frog.setTranslateX(Integer.parseInt(v));
-    }
-    public static void setY1(String v) {
-        frog.setTranslateY(Integer.parseInt(v));
-    }
-
-    public static void setX2(String v) {
-        frog2.setTranslateX(Integer.parseInt(v));
-    }
-    public static void setY2(String v) {
-        frog2.setTranslateY(Integer.parseInt(v));
-    }
-
-    private static boolean arePlayersColliding(int newX, int newY) {
-        // early exit if there is no other player
-        if (opponentFrog == null) {
-            return false;
-        }
-
-        // create theoretical rect of your next position
-        Rectangle nextPosition = new Rectangle(frogSize, frogSize, Color.TRANSPARENT);
-        nextPosition.setTranslateY(newY);
-        nextPosition.setTranslateX(newX);
-
-        return nextPosition.getBoundsInParent().intersects(opponentFrog.getBoundsInParent());
-    }
-
-    public static void startGame() {
-        Scene gameScreen = new Scene(createContent(), WIDTH, HEIGHT);
-
-        // render registration scene
-        stage.setScene(gameScreen);
-
-        // set the frog that the client is controlling
-        controlledFrog = frog;
-        opponentFrog = frog2;
-        if (!isControllingFirstFrog) {
-            controlledFrog = frog2;
-            opponentFrog = frog;
-        }
-
+    public void startGame() {
+        Scene scene = new Scene(createContent(), WIDTH, HEIGHT);
+        stage.setScene(scene);
         stage.getScene().setOnKeyPressed(event -> {
-            int newX;
-            int newY;
+            if (moving) return;
+            FrogMove move;
             switch (event.getCode()) {
                 case W:
-                    newX = (int)controlledFrog.getTranslateX();
-                    newY = (int)(controlledFrog.getTranslateY() - 40);
-
-                    // return if next step will collide with opponent
-                    if (arePlayersColliding(newX, newY)) {
-                        return;
-                    }
-                    if (newY < 0) return;
-                    // set new position
-                    StartClient.getSocketManager().updateGamePosition(newX, newY);
+                case UP:
+                    move = FrogMove.UP;
                     break;
                 case S:
-                    newX = (int)controlledFrog.getTranslateX();
-                    newY = (int)(controlledFrog.getTranslateY() + 40);
-                    // return if next step will collide with opponent
-                    if (arePlayersColliding(newX, newY)) {
-                        return;
-                    }
-
-                    if (newY > HEIGHT) return;
-                    StartClient.getSocketManager().updateGamePosition(newX, newY);
+                case DOWN:
+                    move = FrogMove.DOWN;
                     break;
                 case A:
-                    newX = (int)controlledFrog.getTranslateX() - 40;
-                    newY = (int)(controlledFrog.getTranslateY());
-                    // return if next step will collide with opponent
-                    if (arePlayersColliding(newX, newY)) {
-                        return;
-                    }
-                    if (newX < 0) return;
-                    StartClient.getSocketManager().updateGamePosition(newX, newY);
+                case LEFT:
+                    move = FrogMove.LEFT;
                     break;
                 case D:
-                    newX = (int)controlledFrog.getTranslateX() + 40;
-                    newY = (int)(controlledFrog.getTranslateY());
-                    // return if next step will collide with opponent
-                    if (arePlayersColliding(newX, newY)) {
-                        return;
-                    }
-                    if (newX >= WIDTH) return;
-                    StartClient.getSocketManager().updateGamePosition(newX, newY);
+                case RIGHT:
+                    move = FrogMove.RIGHT;
                     break;
                 default:
-                    break;
+                    return;
             }
+            socketManager.frogMove(move);
         });
     }
 }

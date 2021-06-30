@@ -1,11 +1,13 @@
 package server.controller;
 
+import com.google.gson.Gson;
+import common.constants.ActionTypes;
+import network.entity.FrogMovementRequest;
 import network.entity.LoginResponse;
 import network.entity.RegistrationResponse;
 import network.entity.Scores;
-import com.google.gson.Gson;
-import common.constants.ActionTypes;
 import server.StartServer;
+import network.entity.StateChange;
 import server.logic.Server;
 
 import java.io.DataInputStream;
@@ -14,6 +16,8 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.Optional;
 import java.util.UUID;
+
+import static common.constants.ActionTypes.ActionType.CURRENT_GAME_DATA_RESPONSE;
 
 public class Client implements Runnable {
     
@@ -24,7 +28,7 @@ public class Client implements Runnable {
     DataOutputStream dataOutputStream;
 
     private boolean isLookingForMatch = false;
-    private String clientID;
+    private final String clientID;
     private String username = "";
 
     public Client(Socket socket) throws IOException {
@@ -39,11 +43,11 @@ public class Client implements Runnable {
         while (StartServer.isServerRunning) {
             try {
                 // read request from the client
-                String messageFromClient = dataInputStream.readUTF();
-                ActionTypes.ActionType type = ActionTypes.getActionTypeFromMessage(messageFromClient);
+                String message = dataInputStream.readUTF();
+                ActionTypes.ActionType type = ActionTypes.getActionTypeFromMessage(message);
                 switch (type) {
                     case LOGIN_USER:
-                        onLoginUser(messageFromClient);
+                        onLoginUser(message);
                         break;
                     case FIND_MATCH:
                         onFindMatchRequest();
@@ -52,22 +56,13 @@ public class Client implements Runnable {
                         onStartSingleMatch();
                         break;
                     case UPDATE_GAME_POSITION_REQUEST:
-                        onUpdateGamePositionRequest(messageFromClient);
+                        onUpdateGamePositionRequest(message);
                         break;
-                    case RESET_GAME_POSITION_REQUEST:
-                        onResetGamePositionRequest(messageFromClient);
-                        break;
-                    case GAME_EVENT_TIMEOUT:
-                        onGameTimeoutRequest(messageFromClient);
-                        break;
-//                    case GAME_EVENT_WIN:
-//                        onGameTimeoutRequest(messageFromClient);
-//                        break;
                     case SCORES:
-                        onScores(messageFromClient);
+                        onScores(message);
                         break;
                     case REGISTER_USER:
-                        onRegisterUser(messageFromClient);
+                        onRegisterUser(message);
                         break;
                     case INVALID:
                         System.out.println("ERROR: invalid type " + type);
@@ -75,9 +70,8 @@ public class Client implements Runnable {
                     default:
                         System.out.println("ERROR: unknown type " + type);
                 }
-
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (Throwable t) {
+                t.printStackTrace();
                 break;
             }
         }
@@ -169,17 +163,34 @@ public class Client implements Runnable {
         }
     }
 
+//    private void onUpdateGamePositionRequest(String message) {
+//        String[] splitted = message.split(";");
+//        String roomID = splitted[1];
+//
+//        Room room = StartServer.roomManager.findRoomByID(roomID);
+//        if (room == null) {
+//            System.out.println("onUpdateGamePositionRequest#no room with id " + roomID);
+//            return;
+//        }
+//        System.out.printf("update game position, client [%s] room: [%s] x=%s y=%s\n", clientID, roomID, splitted[2], splitted[3]);
+//        room.updateClientPosition(clientID, splitted[2], splitted[3]);
+//    }
     private void onUpdateGamePositionRequest(String message) {
-        String[] splitted = message.split(";");
-        String roomID = splitted[1];
-
-        Room room = StartServer.roomManager.findRoomByID(roomID);
-        if (room == null) {
-            System.out.println("onUpdateGamePositionRequest#no room with id " + roomID);
+        String[] s = message.split(";");
+        if (s.length < 2) {
+            System.err.println("Error updating game position malformed message: " + message);
             return;
         }
-
-        room.updateClientPosition(clientID, splitted[2], splitted[3]);
+        String json = s[1];
+        FrogMovementRequest request = gson.fromJson(json, FrogMovementRequest.class);
+        String roomId = request.getRoomId();
+        Room room = StartServer.roomManager.findRoomByID(roomId);
+        if (room == null) {
+            System.out.println("onUpdateGamePositionRequest#no room with id " + roomId);
+            return;
+        }
+//        System.out.printf("move=%s client [%s] room: [%s] \n", request.getMove(), clientID, roomId);
+        room.updateClientPosition(clientID, request.getMove());
     }
 
     private void onResetGamePositionRequest(String message) {
@@ -216,6 +227,7 @@ public class Client implements Runnable {
         // send confirmation that clients joined the room with id
         this.sendDataToClient(ActionTypes.ActionType.JOIN_ROOM.name() + ";" + ActionTypes.Code.SUCCESS.name() + ";" + room.getData());
         room.startGame();
+        System.out.printf("starting single player, room id [%s]\n", room.getID());
     }
 
     public boolean isLookingForMatch() {
@@ -235,5 +247,26 @@ public class Client implements Runnable {
 
     public static String getEmptyClientData() {
         return ";";
+    }
+    
+    public void onStateChange(final StateChange change) {
+        final String json = gson.toJson(change);
+        sendDataToClient(CURRENT_GAME_DATA_RESPONSE.name() + ';' + json);
+    }
+    
+    public void winGame() {
+        send(ActionTypes.ActionType.GAME_EVENT_WIN);
+    }
+
+    public void loseGame() {
+        send(ActionTypes.ActionType.GAME_EVENT_LOSE);
+    }
+
+    public void onTimeout() {
+        send(ActionTypes.ActionType.GAME_EVENT_TIMEOUT);
+    }
+
+    private void send(final ActionTypes.ActionType action) {
+        sendDataToClient(action.name() + ';');
     }
 }

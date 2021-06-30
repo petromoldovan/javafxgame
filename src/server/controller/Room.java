@@ -1,68 +1,73 @@
 package server.controller;
 
-import common.constants.ActionTypes;
-import javafx.scene.layout.Pane;
+import common.constants.Constants;
+import network.entity.StateChange;
+import network.entity.enums.FrogMove;
+import server.game.Engine;
+import server.logic.Server;
 import server.model.Position;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import java.util.ArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static common.constants.Constants.GAME_TIME;
 
 public class Room {
-    private static String id;
-    Client c1 = null;
-    Client c2 = null;
-
-    public static String c1StartPositionX = "1";
-    public static String c1StartPositionY = "761";
-    public static String c2StartPositionX = "200";
-    public static String c2StartPositionY = "761";
+    private static final String c1StartPositionX = "1";
+    private static final String c1StartPositionY = "761";
+    private static final String c2StartPositionX = "200";
+    private static final String c2StartPositionY = "761";
+    
+    private final String id;
+    private final Engine engine;
+    private Client c1 = null;
+    private Client c2 = null;
 
     // game related data
-    static Position c1Position = new Position(c1StartPositionX, c1StartPositionY);
-    static Position c2Position = new Position(c2StartPositionX, c2StartPositionY);
-    public int remainingGameTime = 60;
-    private static Timer gameTimer;
+    private final AtomicInteger remainingGameTime = new AtomicInteger(GAME_TIME);
+    private final ScheduledExecutorService gameTimer;
+    private Position c1Position = new Position(c1StartPositionX, c1StartPositionY);
+    private Position c2Position = new Position(c2StartPositionX, c2StartPositionY);
 
-    int currTick = 0;
-    int oneTick = 100;
-
-    ArrayList<Client> participants = new ArrayList<>();
+    private final ArrayList<Client> participants = new ArrayList<>();
 
     public Room(String id) {
         this.id = id;
-        gameTimer = new Timer();
+        gameTimer = Executors.newSingleThreadScheduledExecutor();
+        engine = new Engine();
     }
 
-    // trigger game start with constant updates
+    /**
+     *   Trigger game start with constant updates
+     */
     public void startGame() {
-        // broadcast game info
-        gameTimer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                // reduce remaining time
-                if (currTick >= 1000) {
-                    remainingGameTime --;
-                    currTick = 0;
+        engine.start(c2 != null, this::onChange);
+        gameTimer.scheduleWithFixedDelay(() -> {
+                final int time = remainingGameTime.decrementAndGet();
+                if (time <= 0) {
+                    onTimeoutEvent();
                 } else {
-                    currTick += oneTick;
+                    final StateChange change = new StateChange();
+                    change.setTime(time);
+                    update(change);
                 }
-
-                // send game data to all participants in the room
-                broadcast(ActionTypes.ActionType.CURRENT_GAME_DATA_RESPONSE.name() + ";" + getData());
-
-                if (remainingGameTime < 0) {
-                    stopTimer();
-                }
-            }
-        }, 0, oneTick);
-
-        // TODO: send end game
+        }, 0, 1, TimeUnit.SECONDS);
     }
 
-    private static void stopTimer() {
-        gameTimer.cancel();
-        gameTimer.purge();
+    private void onChange(final StateChange stateChange) {
+        try {
+            update(stateChange);
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
+    }
+
+    private void stopGame() {
+        gameTimer.shutdown();
+        engine.stop();
     }
 
     public boolean addClient(Client c) {
@@ -83,12 +88,6 @@ public class Room {
         }
 
         return true;
-    }
-
-    public void broadcast(String message) {
-        for (Client c : participants) {
-            c.sendDataToClient(message);
-        }
     }
 
     public String getID() {
@@ -141,35 +140,81 @@ public class Room {
         return data;
     }
 
-    public void updateClientPosition(String clientID, String x, String y) {
-        if (c1 != null && c1.getID() == clientID) {
-            c1Position.setX(x);
-            c1Position.setY(y);
-        } else if (c2 != null && c2.getID() == clientID) {
-            c2Position.setX(x);
-            c2Position.setY(y);
-        }
+    public void updateClientPosition(String clientID, FrogMove move) {
+//        System.out.printf("clientId [%s] c1 [%s] c2 [%s]\n", clientID, c1==null ? null : c1.getID(), c2==null ? null : c2.getID());
+        boolean isFirst = isFirstPlayer(clientID);
+        boolean win = engine.updatePlayer(isFirst, move, this::update);
+        if (win) onWin(isFirst);
+    }
+
+    private void onWin(final boolean first) {
+        final Client winner = first ? c1 : c2;
+        final Client loser = first ? c2 : c1;
+        onWin(first, winner, loser);
     }
 
     public void resetClientPosition(String clientID) {
-        if (c1 != null && c1.getID() == clientID) {
+        if (isFirstPlayer(clientID)) {
             c1Position = new Position(c1StartPositionX, c1StartPositionY);
-        } else if (c2 != null && c2.getID() == clientID) {
+        } else if (isSecondPlayer(clientID)) {
             c2Position = new Position(c2StartPositionX, c2StartPositionY);
         }
     }
 
-    private static void gameOver() {
-        stopTimer();
+    private void gameOver() {
+        stopGame();
         RoomManager.deleteRoomByID(id);
     }
 
-    public void onWinEvent() {
-        // TODO: save winner score
-
+    public void onTimeoutEvent() {
+        for (Client c : participants) {
+            c.onTimeout();
+        }
         gameOver();
     }
-    public void onTimeoutEvent() {
+
+    private boolean isFirstPlayer(final String clientID) {
+        return isPlayer(clientID, c1);
+    }
+
+    private boolean isSecondPlayer(final String clientID) {
+        return isPlayer(clientID, c2);
+    }
+
+    private static boolean isPlayer(final String clientID, final Client client) {
+        return client != null && client.getID().equals(clientID);
+    }
+
+    private void update(final StateChange change) {
+        try {
+            onUpdate(change);
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
+    }
+
+    private void onUpdate(final StateChange change) {
+        for (Client c : participants) {
+            c.onStateChange(change);
+        }
+        if (change.getFrog1deaths() >= Constants.FROG_LIVES) {
+            onWin(false, c2, c1);
+        } else if (change.getFrog2deaths() >= Constants.FROG_LIVES) {
+            onWin(true, c1, c2);
+        }
+    }
+
+    private void onWin(final boolean first, final Client winner, final Client loser) {
+        int time = remainingGameTime.get();
+        int deaths = engine.getFrogDeaths(first);
+        final int scores = Server.getLogic().calculateScores(time, deaths);
+        if (null != winner) {
+            Server.getLogic().saveScores(winner.getUsername(), scores);
+            winner.winGame();
+        }
+        if (null != loser) {
+            loser.loseGame();
+        }
         gameOver();
     }
 }

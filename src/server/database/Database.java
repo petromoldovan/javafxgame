@@ -29,10 +29,11 @@ public class Database {
             ")";
     
     private static final String SELECT_SCORES = "select username, score from scores";
-    private static final String ADD_SCORES = "insert into scores (username, score) values ('Joe', 500), ('John', 200), ('Nick', 400)";
+    private static final String ADD_SCORES = "insert into scores (username, score) values ('Joe', 100), ('John', 200), ('Nick', 300)";
     private static final String COUNT_SCORES = "select count(id) from scores;";
     private static final String REGISTER = "insert into users (username, password) values (?,?)";
     private static final String LOGIN = "select id from users where username = ? and password = ?";
+    private static final String SAVE_SCORE = "insert into scores (username, score) values (?,?)";
 
     private Connection con;
 
@@ -106,6 +107,16 @@ public class Database {
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? rs.getInt(1) : -1;    
             }
+        });
+    }
+
+    public boolean saveScore(final String username, final int scores) throws SQLException {
+        return Db.prepQuery(con, SAVE_SCORE, ps -> {
+            int i = 0;
+            ps.setString(++i, username);
+            ps.setInt(++i, scores);
+            ps.execute();
+            return true;
         });
     }
 

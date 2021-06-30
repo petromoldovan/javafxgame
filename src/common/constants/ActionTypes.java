@@ -18,18 +18,20 @@ public class ActionTypes {
         RESET_GAME_POSITION_REQUEST,
         GAME_EVENT_TIMEOUT,
         GAME_EVENT_WIN,
+        GAME_EVENT_LOSE,
         SCORES
     }
 
     public static ActionType getActionTypeFromMessage(String message) {
-        ActionType type = ActionType.INVALID;
-
-        try {
-            type = Enum.valueOf(ActionTypes.ActionType.class, message.split(";")[0]);
-        } catch (Exception e) {
-            e.printStackTrace();
+        final String[] s = message.split(";");
+        if (s.length == 0) {
+            System.err.printf("Error reading action type fro, [%s] \n", message);
+            return ActionType.INVALID;
         }
-
-        return type;
+        final String name = s[0];
+        for (ActionType type : ActionType.values()) {
+            if (type.name().equals(name)) return type;
+        }
+        return ActionType.INVALID;
     }
 }

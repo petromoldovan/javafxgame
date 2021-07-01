@@ -1,19 +1,25 @@
 package client.game.model;
 
+import common.constants.AssetData;
+import common.constants.Assets;
 import javafx.scene.image.Image;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
+import network.model.enums.CarType;
+
+import static common.constants.Constants.ASSETS;
 
 public class Car extends Rectangle {
     
     private double x;
     private double y;
 
-    public Car(int width, int height) {
-        super(width, height);
-        this.setFill(new ImagePattern(new Image("/client/resources/assets/car.png")));
+    public Car(AssetData data) {
+        super(data.getWidth(), data.getHeight());
+        this.setFill(new ImagePattern(new Image(data.getUrl())));
+
     }
-    
+
     public void draw() {
         this.setTranslateX(x);
         this.setTranslateY(y);

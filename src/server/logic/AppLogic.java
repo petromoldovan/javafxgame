@@ -1,6 +1,5 @@
 package server.logic;
 
-import common.constants.Constants;
 import network.entity.Score;
 import network.entity.Scores;
 import server.StartServer;

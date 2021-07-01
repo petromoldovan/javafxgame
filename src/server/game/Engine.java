@@ -12,7 +12,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static common.constants.Constants.BLOCK_SIZE;
 import static common.constants.Constants.GAME_TICK_TIMER;
-import static common.constants.Constants.UNIT_SIZE;
 import static common.constants.Constants.WIDTH;
 
 public class Engine {
@@ -77,7 +76,7 @@ public class Engine {
     }
 
     private void spawnCar(final int line) {
-        Car car = new Car(idGen.incrementAndGet(),UNIT_SIZE + (UNIT_SIZE * 0.7), UNIT_SIZE);
+        Car car = new Car(idGen.incrementAndGet());
         road.add(car, line);
     }
 

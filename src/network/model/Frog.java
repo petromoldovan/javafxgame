@@ -46,8 +46,4 @@ public class Frog {
                 ", dead=" + dead +
                 '}';
     }
-
-    public void reset() {
-        
-    }
 }

@@ -1,6 +1,9 @@
 package client.game.model;
 
 import client.game.model.enums.Direction;
+import common.constants.AssetData;
+import common.constants.Assets;
+import common.constants.Constants;
 import javafx.animation.RotateTransition;
 import javafx.animation.TranslateTransition;
 import javafx.scene.image.Image;
@@ -18,11 +21,10 @@ public class Frog extends Rectangle {
     private final ImagePattern dead;
     private Direction direction;
 
-    public Frog(boolean first, int width, int height) {
-        super(width, height, Color.TRANSPARENT);
-        String file = first ? "/client/resources/assets/frog.png" : "/client/resources/assets/frog2.png";
-        frog = new ImagePattern(new Image(file));
-        dead = new ImagePattern(new Image("/client/resources/assets/frog3.png"));
+    public Frog(AssetData data, AssetData deadData) {
+        super(data.getWidth(), data.getHeight());
+        frog = new ImagePattern(new Image(data.getUrl()));
+        dead = new ImagePattern(new Image(deadData.getUrl()));
         setFill(frog);
         direction = Direction.UP;
     }

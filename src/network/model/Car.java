@@ -1,22 +1,30 @@
 package network.model;
 
-import static common.constants.Constants.UNIT_SIZE;
+import common.constants.AssetData;
+import common.constants.Assets;
+import network.model.enums.CarType;
+
+import static common.constants.Constants.FROG_SIZE;
+import static common.constants.Constants.FROG_HIT_BOX_CORRECTION;
 
 public class Car {
 
     private final int id;
     private final double width;
     private final double height;
+    private final CarType carType;
 
     private double speed;
     private double x;
     private double y;
     private boolean spawn;
 
-    public Car(final int id, final double width, final double height) {
+    public Car(final int id) {
+        carType = Math.random() > 0.5d ? CarType.SEDAN : CarType.WAGON;
+        final AssetData data = Assets.CARS.getCarsData(carType, speed > 0);
+        width = data.getWidth();
+        height = data.getHeight() - 2;
         this.id = id;
-        this.width = width;
-        this.height = height;
     }
 
     public void setSpeed(double speed) {
@@ -33,11 +41,10 @@ public class Car {
     }
 
     public boolean hits(final Frog frog) {
-        //    return x < r.x + r.width && x + width > r.x && y < r.y + r.height && y + height > r.y;
-        return x < frog.getX() + UNIT_SIZE 
-                && x + width > frog.getX() 
-                && y < frog.getY() + UNIT_SIZE 
-                && y + height > frog.getY();
+        return x < frog.getX() + FROG_SIZE - FROG_HIT_BOX_CORRECTION
+                && x + width > frog.getX() + FROG_HIT_BOX_CORRECTION
+                && y < frog.getY()
+                && y + height > frog.getY(); // simplify y
     }
     
     public void setX(final int x) {
@@ -71,6 +78,10 @@ public class Car {
     public boolean isSpawn() {
         return spawn;
     }
+    
+    public boolean leftToRight() {
+        return speed > 0;
+    }
 
     @Override
     public String toString() {
@@ -78,5 +89,9 @@ public class Car {
                 "x=" + x +
                 ", y=" + y +
                 '}';
+    }
+
+    public CarType getType() {
+        return carType;
     }
 }

@@ -18,7 +18,7 @@ import static common.constants.Constants.START_X2;
 import static common.constants.Constants.START_Y;
 import static common.constants.Constants.TOP_ROAD_START;
 import static common.constants.Constants.BOTTOM_ROAD_START;
-import static common.constants.Constants.UNIT_SIZE;
+import static common.constants.Constants.FROG_SIZE;
 import static common.constants.Constants.WIDTH;
 
 public class Road {
@@ -35,10 +35,10 @@ public class Road {
     private final AtomicInteger frog2deaths = new AtomicInteger(0);
     private Frog frog1;
     private Frog frog2;
-    private AtomicInteger frog1DeathTimer = new AtomicInteger(0);
-    private AtomicInteger frog2DeathTimer = new AtomicInteger(0);
-    private AtomicBoolean frog1DeathTimerActive = new AtomicBoolean(false);
-    private AtomicBoolean frog2DeathTimerActive = new AtomicBoolean(false);
+    private final AtomicInteger frog1DeathTimer = new AtomicInteger(0);
+    private final AtomicInteger frog2DeathTimer = new AtomicInteger(0);
+    private final AtomicBoolean frog1DeathTimerActive = new AtomicBoolean(false);
+    private final AtomicBoolean frog2DeathTimerActive = new AtomicBoolean(false);
     
     {
         int i = -1;
@@ -156,12 +156,12 @@ public class Road {
                 if (y < HEIGHT) changed = true;
                 break;
             case LEFT:
-                x = x - UNIT_SIZE;
+                x = x - FROG_SIZE;
                 if (x >= 0) changed = true;
                 break;
             case RIGHT:
-                x = x + UNIT_SIZE;
-                if (x < WIDTH - UNIT_SIZE) changed = true;
+                x = x + FROG_SIZE;
+                if (x < WIDTH - FROG_SIZE) changed = true;
                 break;
         }
         if (changed) {

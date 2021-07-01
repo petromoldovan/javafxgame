@@ -6,6 +6,7 @@ import client.game.model.Car;
 import client.game.model.Frog;
 import client.game.model.Player;
 import client.screen.AppScreen;
+import common.constants.Assets;
 import common.constants.Constants;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
@@ -42,7 +43,6 @@ import static common.constants.Constants.GAME_TIME;
 import static common.constants.Constants.HEIGHT;
 import static common.constants.Constants.LIVE_HEIGHT;
 import static common.constants.Constants.LIVE_WIDTH;
-import static common.constants.Constants.UNIT_SIZE;
 import static common.constants.Constants.WIDTH;
 
 public class GameController {
@@ -76,7 +76,7 @@ public class GameController {
             final double y = each.getY();
             Frog frog = frogs[i];
             if (null == frog) {
-                frog = new Frog(each.isFirst(), UNIT_SIZE, UNIT_SIZE);
+                frog = new Frog(Assets.FROG.getFrogData(each.isFirst()), Assets.FROG.getDeadFrogData());
                 frogs[i] = frog;
                 root.getChildren().add(frog);
                 frog.reset(x, y);
@@ -107,7 +107,7 @@ public class GameController {
             final double y = each.getY();
             Car car = carMap.get(id);
             if (car == null) {
-                car = new Car(UNIT_SIZE, (int) (UNIT_SIZE * 0.7));
+                car = new Car(Assets.CARS.getCarsData(each.getType(), each.leftToRight()));
                 root.getChildren().add(car);
                 carMap.put(id, car);
                 car.set(x, y);
@@ -166,7 +166,7 @@ public class GameController {
         root.setPrefSize(WIDTH, HEIGHT);
         
         Rectangle road = new Rectangle(WIDTH, HEIGHT, Color.WHITE);
-        road.setFill(new ImagePattern(new Image("/client/resources/assets/road.png")));
+        road.setFill(new ImagePattern(new Image("/client/resources/assets/bg.png")));
         root.getChildren().add(road);        
         
         ProgressBar time = new ProgressBar(1);

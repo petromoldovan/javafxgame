@@ -10,9 +10,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static common.constants.Constants.BLOCK_SIZE;
-import static common.constants.Constants.GAME_TICK_TIMER;
-import static common.constants.Constants.WIDTH;
+import static common.constants.Constants.*;
 
 public class Engine {
 
@@ -36,10 +34,10 @@ public class Engine {
     private void addFrogs(boolean twoFrogs) {
         StateChange change = new StateChange();
         Frog frog1 = road.addFrog();
-        change.getFrogs().add(frog1);
+        change.setFrog1(frog1);
         if (twoFrogs) {
             Frog frog2 = road.addFrog();
-            change.getFrogs().add(frog2);
+            change.setFrog1(frog2);
         }
         changeEvent.onChange(change);
     }
@@ -81,12 +79,16 @@ public class Engine {
     }
 
     private void update() {
-        final StateChange stateChange = road.update();
-        changeEvent.onChange(stateChange);
+        try {
+            final StateChange stateChange = road.update();
+            changeEvent.onChange(stateChange);
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
     }
 
-    public boolean updatePlayer(final boolean isFirst, final FrogMove move, final StateChangeEvent changeEvent) {
-        return road.updateFrog(isFirst, move, changeEvent);
+    public boolean updatePlayer(final boolean isFirst, final FrogMove move) {
+        return road.updateFrog(isFirst, move);
     }
 
     public int getFrogDeaths(boolean first) {

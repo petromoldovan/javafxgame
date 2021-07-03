@@ -10,14 +10,30 @@ import java.util.List;
 public class StateChange {
     
     private final List<Car> cars;
-    private final List<Frog> frogs;
+    private Frog frog1;
+    private Frog frog2;
     private int time = -1;
     private int frog1deaths = -1;
     private int frog2deaths = -1;
 
     public StateChange() {
-        this.cars = new ArrayList<>();
-        this.frogs = new ArrayList<>();
+        cars = new ArrayList<>();
+    }
+
+    public Frog getFrog1() {
+        return frog1;
+    }
+
+    public void setFrog1(final Frog frog1) {
+        this.frog1 = frog1;
+    }
+
+    public Frog getFrog2() {
+        return frog2;
+    }
+
+    public void setFrog2(final Frog frog2) {
+        this.frog2 = frog2;
     }
 
     public int getFrog1deaths() {
@@ -40,16 +56,12 @@ public class StateChange {
         return cars;
     }
 
-    public List<Frog> getFrogs() {
-        return frogs;
-    }
-
     public int getTime() {
         return time;
     }
     
     public boolean hasTime() {
-        return time > 0;
+        return time >= 0;
     }
 
     public void setTime(final int time) {
@@ -60,7 +72,8 @@ public class StateChange {
     public String toString() {
         return "StateChange{" +
                 "cars=" + cars +
-                ", frogs=" + frogs +
+                ", frog1=" + frog1 +
+                ", frog2=" + frog2 +
                 ", time=" + time +
                 '}';
     }

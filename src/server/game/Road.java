@@ -11,20 +11,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static common.constants.Constants.BLOCK_SIZE;
-import static common.constants.Constants.HEIGHT;
-import static common.constants.Constants.START_X1;
-import static common.constants.Constants.START_X2;
-import static common.constants.Constants.START_Y;
-import static common.constants.Constants.TOP_ROAD_START;
-import static common.constants.Constants.BOTTOM_ROAD_START;
-import static common.constants.Constants.FROG_SIZE;
-import static common.constants.Constants.WIDTH;
+import static common.constants.Constants.*;
 
 public class Road {
 
-    public static final int SIZE = 10;
+    private static final int SIZE = 10;
     private static final int MIDDLE = SIZE / 2;
+    private static final int SYNC_MS = 700;
 
     private final int width;
     private final int blockSize;
@@ -39,7 +32,15 @@ public class Road {
     private final AtomicInteger frog2DeathTimer = new AtomicInteger(0);
     private final AtomicBoolean frog1DeathTimerActive = new AtomicBoolean(false);
     private final AtomicBoolean frog2DeathTimerActive = new AtomicBoolean(false);
-    
+    private final AtomicInteger roundTimer = new AtomicInteger(Constants.GAME_TIME * 1000);
+    private final AtomicInteger roundTimerSync = new AtomicInteger(Constants.GAME_TIME * 1000 + SYNC_MS);
+    private volatile double frog1x;
+    private volatile double frog1y;
+    private volatile double frog2x;
+    private volatile double frog2y;
+    private final AtomicBoolean frog1moves = new AtomicBoolean(false);
+    private final AtomicBoolean frog2moves = new AtomicBoolean(false);
+
     {
         int i = -1;
         carSpeed[++i] = -0.5;
@@ -93,12 +94,35 @@ public class Road {
                 car.setSpawn(false);
             }
             car.update();
+        }
+        change.getCars().addAll(cars);
+        if (frog1moves.get()) {
+            frog1.set(frog1x, frog1y);
+            frog1moves.set(false);
+            change.setFrog1(frog1);
+        }
+        if (frog2moves.get()) {
+            frog2.set(frog2x, frog2y);
+            frog2moves.set(false);
+            change.setFrog2(frog2);
+        }
+        for (Car car : cars) {
             frogCarInteraction(frog1, change, car);
             frogCarInteraction(frog2, change, car);
         }
-        change.getCars().addAll(cars);
+        if (!frog1DeathTimerActive.get() && !frog2DeathTimerActive.get()) {
+            // time is out
+            if (roundTimer.accumulateAndGet(-GAME_TICK_TIMER, Integer::sum) <= 0) {
+                setDead(frog1, change);
+                setDead(frog2, change);
+            }
+        }
         frogDeathTimer(change, frog1DeathTimerActive, frog1DeathTimer, frog1);
         frogDeathTimer(change, frog2DeathTimerActive, frog2DeathTimer, frog2);
+        if (roundTimer.get() < roundTimerSync.get()) {
+            roundTimerSync.set(roundTimer.get() - SYNC_MS);
+            change.setTime(roundTimer.get());
+        }
         return change;
     }
 
@@ -108,25 +132,40 @@ public class Road {
             timer.accumulateAndGet(-Constants.GAME_TICK_TIMER, Integer::sum);
         } else {
             frog.setDead(false);
-            frog.set(frog == frog1 ? START_X1 : START_X2, START_Y);
+            frog1.set(START_X1, START_Y);
+            change.setFrog1(frog1);
+            if (null != frog2) {
+                change.setFrog2(frog2);
+                frog2.set(START_X2, START_Y);
+            }
             active.set(false);
-            change.getFrogs().add(frog);
         }
     }
 
     private void frogCarInteraction(Frog frog, StateChange change, final Car car) {
         if (null==frog || frog.isDead() || !car.hits(frog)) return;
+        setDead(frog, change);
+    }
+
+    private void setDead(final Frog frog, final StateChange change) {
+        if (null == frog) return;
         frog.setDead(true);
         if (frog.isFirst()) {
             int lives = frog1deaths.incrementAndGet();
             change.setFrog1deaths(lives);
             startDeathTimer(frog1DeathTimerActive, frog1DeathTimer);
+            if (frog2 != null) frog2.set(START_X2, START_Y);
         } else {
             int lives = frog2deaths.incrementAndGet();
             change.setFrog2deaths(lives);
             startDeathTimer(frog2DeathTimerActive, frog2DeathTimer);
+            frog1.set(START_X1, START_Y);
         }
-        change.getFrogs().add(frog);
+        change.setFrog1(frog1);
+        if (frog2 != null) change.setFrog2(frog2);
+        roundTimer.set(Constants.GAME_TIME * 1000);
+        roundTimerSync.set(roundTimer.get() - SYNC_MS);
+        change.setTime(roundTimer.get());
     }
 
     private void startDeathTimer(final AtomicBoolean active, final AtomicInteger deathTimer) {
@@ -134,10 +173,10 @@ public class Road {
         deathTimer.set(Constants.FROG_DEAD_TIME);
     }
 
-    public boolean updateFrog(boolean first, FrogMove move, StateChangeEvent changeEvent) {
+    public boolean updateFrog(boolean first, FrogMove move) {
         boolean result = false;
         Frog frog = getFrog(first);
-        if (frog.isDead()) return result;
+        if (frog1DeathTimerActive.get() || frog2DeathTimerActive.get() || isMoving(frog)) return result;
         double x = frog.getX();
         double y = frog.getY();
 //        System.out.printf("Frog x=%f y=%f\n", x, y);
@@ -146,7 +185,7 @@ public class Road {
             case UP:
                 y = y - BLOCK_SIZE;
                 changed = true;
-                if (y < TOP_ROAD_START) {
+                if (y <= FINISH) {
                     // win condition met
                     result = true;
                 }
@@ -164,13 +203,25 @@ public class Road {
                 if (x < WIDTH - FROG_SIZE) changed = true;
                 break;
         }
-        if (changed) {
-            frog.set(x, y);
-            final StateChange change = new StateChange();
-            change.getFrogs().add(frog);
-            changeEvent.onChange(change);
+        if (!changed) return result;
+        if (first) {
+            synchronized (frog1moves) {
+                frog1x = x;
+                frog1y = y;
+                frog1moves.set(true);
+            }
+        } else {
+            synchronized (frog2moves) {
+                frog2x = x;
+                frog2y = y;
+                frog2moves.set(true);
+            }
         }
         return result;
+    }
+
+    private boolean isMoving(final Frog frog) {
+        return frog == frog1 ? frog1moves.get() : frog2moves.get();
     }
 
     private Frog getFrog(final boolean first) {

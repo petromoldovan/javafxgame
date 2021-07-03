@@ -1,13 +1,13 @@
 package client.controller;
 
 import client.StartClient;
-import network.entity.Score;
 import client.screen.AppScreen;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import network.entity.Score;
 
 public class ScoresController {
 
@@ -17,6 +17,7 @@ public class ScoresController {
     @FXML
     public void initialize() {
         table.getColumns().clear();
+        table.getColumns().add(getPosColumn());
         table.getColumns().add(getUserColumn());
         table.getColumns().add(getScoreColumn());
         
@@ -28,15 +29,24 @@ public class ScoresController {
     }
 
     private TableColumn<Score, String> getScoreColumn() {
-        TableColumn<Score, String> scoreColumn  = new TableColumn<>("Score");
-        scoreColumn.setCellValueFactory(c -> new SimpleStringProperty(String.valueOf(c.getValue().getScore())));
-        return scoreColumn;
+        TableColumn<Score, String> column  = new TableColumn<>("Score");
+        column.setCellValueFactory(c -> new SimpleStringProperty(String.valueOf(c.getValue().getScore())));
+        column.setSortable(false);
+        return column;
+    }
+    
+    private TableColumn<Score, String> getPosColumn() {
+        TableColumn<Score, String> column  = new TableColumn<>("Position");
+        column.setCellValueFactory(c -> new SimpleStringProperty(String.valueOf(c.getValue().getPos())));
+        column.setSortable(false);
+        return column;
     }
 
     private TableColumn<Score, String> getUserColumn() {
-        TableColumn<Score, String> userColumn  = new TableColumn<>("Username");
-        userColumn.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getUser()));
-        return userColumn;
+        TableColumn<Score, String> column  = new TableColumn<>("Username");
+        column.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getUser()));
+        column.setSortable(false);
+        return column;
     }
 
     @FXML

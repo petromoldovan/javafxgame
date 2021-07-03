@@ -2,12 +2,7 @@ package server.database;
 
 import network.entity.Score;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,7 +23,7 @@ public class Database {
                     "password varchar(30) not null" +
             ")";
     
-    private static final String SELECT_SCORES = "select username, score from scores";
+    private static final String SELECT_SCORES = "select username, score from scores order by score DESC";
     private static final String ADD_SCORES = "insert into scores (username, score) values ('Joe', 100), ('John', 200), ('Nick', 300)";
     private static final String COUNT_SCORES = "select count(id) from scores;";
     private static final String REGISTER = "insert into users (username, password) values (?,?)";
@@ -78,11 +73,12 @@ public class Database {
         return Db.query(con, stmt -> {
             List<Score> result = new ArrayList<>();
             try (ResultSet rs = stmt.executeQuery(SELECT_SCORES)) {
+                int pos = 0;
                 while (rs.next()) {
                     int i = 0;
                     final String username = rs.getString(++i);
                     final int score = rs.getInt(++i);
-                    result.add(new Score(username, score));
+                    result.add(new Score(++pos, username, score));
                 }
             }
             return result;

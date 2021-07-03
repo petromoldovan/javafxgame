@@ -10,10 +10,6 @@ import server.model.Position;
 import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static common.constants.Constants.GAME_TIME;
 
 public class Room {
     private static final String c1StartPositionX = "1";
@@ -27,7 +23,6 @@ public class Room {
     private Client c2 = null;
 
     // game related data
-    private final AtomicInteger remainingGameTime = new AtomicInteger(GAME_TIME);
     private final ScheduledExecutorService gameTimer;
     private Position c1Position = new Position(c1StartPositionX, c1StartPositionY);
     private Position c2Position = new Position(c2StartPositionX, c2StartPositionY);
@@ -45,16 +40,6 @@ public class Room {
      */
     public void startGame() {
         engine.start(c2 != null, this::onChange);
-        gameTimer.scheduleWithFixedDelay(() -> {
-                final int time = remainingGameTime.decrementAndGet();
-                if (time <= 0) {
-                    onTimeoutEvent();
-                } else {
-                    final StateChange change = new StateChange();
-                    change.setTime(time);
-                    update(change);
-                }
-        }, 0, 1, TimeUnit.SECONDS);
     }
 
     private void onChange(final StateChange stateChange) {
@@ -104,7 +89,7 @@ public class Room {
         data += getClientMetaInformation();
 
         // get timer
-        data += ";" + remainingGameTime;
+//        data += ";" + remainingGameTime;
 
         // get position info
         data += getPositionInformation();
@@ -143,7 +128,7 @@ public class Room {
     public void updateClientPosition(String clientID, FrogMove move) {
 //        System.out.printf("clientId [%s] c1 [%s] c2 [%s]\n", clientID, c1==null ? null : c1.getID(), c2==null ? null : c2.getID());
         boolean isFirst = isFirstPlayer(clientID);
-        boolean win = engine.updatePlayer(isFirst, move, this::update);
+        boolean win = engine.updatePlayer(isFirst, move);
         if (win) onWin(isFirst);
     }
 
@@ -170,7 +155,6 @@ public class Room {
         for (Client c : participants) {
             c.onTimeout();
         }
-        gameOver();
     }
 
     private boolean isFirstPlayer(final String clientID) {
@@ -205,7 +189,8 @@ public class Room {
     }
 
     private void onWin(final boolean first, final Client winner, final Client loser) {
-        int time = remainingGameTime.get();
+//        int time = remainingGameTime.get();
+        int time = 5; //todo fix
         int deaths = engine.getFrogDeaths(first);
         final int scores = Server.getLogic().calculateScores(time, deaths);
         if (null != winner) {

@@ -2,10 +2,12 @@ package network.entity;
 
 public class Score {
     
+    private int pos;
     private String user;
     private int score;
 
-    public Score(final String user, final int score) {
+    public Score(final int pos, final String user, final int score) {
+        this.pos = pos;
         this.user = user;
         this.score = score;
     }
@@ -24,5 +26,9 @@ public class Score {
 
     public void setScore(final int score) {
         this.score = score;
+    }
+
+    public int getPos() {
+        return pos;
     }
 }

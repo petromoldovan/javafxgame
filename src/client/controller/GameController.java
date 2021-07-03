@@ -18,6 +18,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -38,12 +39,7 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import static common.constants.Constants.FROG_LIVES;
-import static common.constants.Constants.GAME_TIME;
-import static common.constants.Constants.HEIGHT;
-import static common.constants.Constants.LIVE_HEIGHT;
-import static common.constants.Constants.LIVE_WIDTH;
-import static common.constants.Constants.WIDTH;
+import static common.constants.Constants.*;
 
 public class GameController {
 
@@ -56,6 +52,7 @@ public class GameController {
     private HBox rightLives;
     private HBox leftLives;
     private volatile boolean moving = false;
+    private HBox hBox;
 
     public static void setPlayer1(Player p) {
     }
@@ -65,42 +62,18 @@ public class GameController {
     }
 
     public void onChangeState(final StateChange change) {
-        Platform.runLater(() -> onChange(change));
+        Platform.runLater(() -> {
+            try {
+                onChange(change);
+            } catch (Throwable t) {
+                t.printStackTrace();
+            }
+        });
     }
 
     private void onChange(final StateChange change) {
-        if (!change.getFrogs().isEmpty()) System.out.println(change.getFrogs());
-        change.getFrogs().forEach(each -> {
-            int i = each.isFirst() ? 0 : 1;
-            final double x = each.getX();
-            final double y = each.getY();
-            Frog frog = frogs[i];
-            if (null == frog) {
-                frog = new Frog(Assets.FROG.getFrogData(each.isFirst()), Assets.FROG.getDeadFrogData());
-                frogs[i] = frog;
-                root.getChildren().add(frog);
-                frog.reset(x, y);
-            } else {
-                if (each.isDead()) {
-                    updateLives(each, change);
-                    frog.setDead();
-                } else {
-                    if (frog.isDead()) {
-                        frog.setAlive();
-                        frog.reset(x, y);
-                    } else {
-                        frog.move(x, y);
-                        moving = true;
-                        new Timer().schedule(new TimerTask() {
-                            @Override
-                            public void run() {
-                                moving = false;
-                            }
-                        }, Constants.FROG_MOVE_TIME);
-                    }
-                }
-            }
-        });
+        updateFrog(change.getFrog1(), change);
+        updateFrog(change.getFrog2(), change);
         change.getCars().forEach(each -> {
             final int id = each.getId();
             final double x = each.getX();
@@ -116,21 +89,61 @@ public class GameController {
                 car.move(x, y);
             }
         });
-        if (change.hasTime()) setTimeLeft(change.getTime());
+        if (change.hasTime()) setTimeLeft((double) change.getTime() / (GAME_TIME * 1000));    
     }
 
-    private void updateLives(final network.model.Frog each, final StateChange change) {
+    private void updateFrog(network.model.Frog newFrog, StateChange change) {
+        if (null == newFrog) return;
+        int i = newFrog.isFirst() ? 0 : 1;
+        final double x = newFrog.getX();
+        final double y = newFrog.getY();
+        Frog frog = frogs[i];
+        if (null == frog) {
+            frog = new Frog(Assets.FROG.getFrogData(newFrog.isFirst()), Assets.FROG.getDeadFrogData());
+            frogs[i] = frog;
+            root.getChildren().add(frog);
+            frog.reset(x, y);
+        } else {
+            if (newFrog.isDead()) {
+                frog.move(x, y);
+                frog.setDead();
+                onFrogDeath(newFrog, change);
+            } else {
+                if (frog.isDead()) {
+                    frog.setAlive();
+                    frog.reset(x, y);
+                } else {
+                    frog.move(x, y);
+                    moving = true;
+                    new Timer().schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            moving = false;
+                        }
+                    }, Constants.FROG_MOVE_TIME);
+                }
+            }
+        }
+    }
+
+    private void onFrogDeath(final network.model.Frog each, final StateChange change) {
         HBox hBox;
         int index;
+        boolean tryAgain;
         if (each.isFirst()) {
             hBox = leftLives;
-            index = Constants.FROG_LIVES - change.getFrog1deaths();
+            int deaths = change.getFrog1deaths();
+            index = Constants.FROG_LIVES - deaths;
+            tryAgain = deaths < FROG_LIVES;
         } else {
             hBox = rightLives;
+            int deaths = change.getFrog2deaths();
             index = change.getFrog2deaths() - 1;
+            tryAgain = deaths < FROG_LIVES;
         }
         hBox.getChildren().remove(index);
         hBox.getChildren().add(index, newEmptyLive());
+        if (tryAgain) showMessage("TRY AGAIN!");
     }
 
     private Node newEmptyLive() {
@@ -184,7 +197,7 @@ public class GameController {
         rightLives = new HBox(newLives("/client/resources/assets/live2.png"));
         rightLives.setPrefWidth(LIVE_WIDTH);
         pane.setRight(rightLives);
-        
+
         root.getChildren().add(pane);
 
         return root;
@@ -207,9 +220,9 @@ public class GameController {
     
     public void showMessage(String message) {
         Platform.runLater(() -> {
-            HBox hBox = new HBox();
+            hBox = new HBox();
             hBox.setTranslateX( (WIDTH / 2d) - 130 );
-            hBox.setTranslateY( (HEIGHT / 2d) - 25 );
+            hBox.setTranslateY(HEIGHT / 2d);
             final VBox vBox = new VBox(hBox);
             vBox.setAlignment(Pos.CENTER);
             vBox.setPrefWidth(WIDTH);
@@ -218,24 +231,30 @@ public class GameController {
             for (int i = 0; i < message.length(); i++) {
                 char letter = message.charAt(i);
                 Text text = new Text(String.valueOf(letter));
-                text.setFont(Font.font(50));
                 text.setOpacity(0);
-                text.setStyle("-fx-dark-text-color: red;");
+                text.setStyle("-fx-dark-text-color: #ffffff;");
+                text.setFont(Font.font("Letter Magic", 60));
+                DropShadow shadow = new DropShadow(40, Color.BLACK);
+                text.setEffect(shadow);
                 hBox.getChildren().add(text);
                 FadeTransition ft = new FadeTransition(Duration.seconds(0.66), text);
                 ft.setToValue(1);
                 ft.setDelay(Duration.seconds(i * 0.15));
                 ft.play();
             }
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    Platform.runLater(() -> {
+                        if (hBox != null) hBox.setVisible(false);
+                    });
+                }
+            }, Constants.FROG_DEAD_TIME);
         });
     }
 
-    public void setTimeLeft(int time) {
-        double progress = (double)time / GAME_TIME;
-        Platform.runLater(() -> {
-//            System.out.printf("time=%d, progress=%f\n", time, progress);
-            timeLeft.setValue(progress);
-        });
+    public void setTimeLeft(double time) {
+        Platform.runLater(() -> timeLeft.setValue(time));
     }
 
     public void startGame() {

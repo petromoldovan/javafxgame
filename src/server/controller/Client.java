@@ -2,12 +2,8 @@ package server.controller;
 
 import com.google.gson.Gson;
 import common.constants.ActionTypes;
-import network.entity.FrogMovementRequest;
-import network.entity.LoginResponse;
-import network.entity.RegistrationResponse;
-import network.entity.Scores;
+import network.entity.*;
 import server.StartServer;
-import network.entity.StateChange;
 import server.logic.Server;
 
 import java.io.DataInputStream;
@@ -153,8 +149,8 @@ public class Client implements Runnable {
 
             Room room = StartServer.roomManager.newRoom();
             // add clients to the new room
-            room.addClient(this);
-            room.addClient(opponent);
+            room.addClient(opponent); // first client
+            room.addClient(this); // second client who has found a match
 
             // send confirmation that clients joined the room with id
             this.sendDataToClient(ActionTypes.ActionType.JOIN_ROOM.name() + ";" + ActionTypes.Code.SUCCESS.name() + ";" + room.getData());

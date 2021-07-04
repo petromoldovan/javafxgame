@@ -1,6 +1,8 @@
 package network.model;
 
-public class Frog {
+import static common.constants.Constants.FROG_SIZE;
+
+public class Frog implements Model {
 
     private final boolean first;
     private double x;
@@ -24,7 +26,17 @@ public class Frog {
     public double getY() {
         return y;
     }
-    
+
+    @Override
+    public double getWidth() {
+        return FROG_SIZE;
+    }
+
+    @Override
+    public double getHeight() {
+        return FROG_SIZE;
+    }
+
     public void set(double x, double y) {
         this.x = x;
         this.y = y;

@@ -1,13 +1,9 @@
 package client.game.model;
 
 import common.constants.AssetData;
-import common.constants.Assets;
 import javafx.scene.image.Image;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
-import network.model.enums.CarType;
-
-import static common.constants.Constants.ASSETS;
 
 public class Car extends Rectangle {
     
@@ -16,8 +12,8 @@ public class Car extends Rectangle {
 
     public Car(AssetData data) {
         super(data.getWidth(), data.getHeight());
-        this.setFill(new ImagePattern(new Image(data.getUrl())));
-
+        setFill(new ImagePattern(new Image(data.getUrl())));
+        setStyle("-fx-background-color: red; -fx-border-style: solid; -fx-border-width: 5; -fx-border-color: black; -fx-min-width: 20; -fx-min-height:20; -fx-max-width:20; -fx-max-height: 20;");
     }
 
     public void draw() {

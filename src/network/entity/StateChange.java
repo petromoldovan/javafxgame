@@ -9,15 +9,35 @@ import java.util.List;
 
 public class StateChange {
     
-    private final List<Car> cars;
+    private List<Car> cars;
+    private List<Car> carRemoval;
     private Frog frog1;
     private Frog frog2;
     private int time = -1;
     private int frog1deaths = -1;
     private int frog2deaths = -1;
+    private int frog1scores = -1;
+    private int frog2scores = -1;
 
     public StateChange() {
         cars = new ArrayList<>();
+        carRemoval = new ArrayList<>();
+    }
+
+    public int getFrog1scores() {
+        return frog1scores;
+    }
+
+    public void setFrog1scores(final int frog1scores) {
+        this.frog1scores = frog1scores;
+    }
+
+    public void setFrog2scores(final int frog2scores) {
+        this.frog2scores = frog2scores;
+    }
+
+    public int getFrog2scores() {
+        return frog2scores;
     }
 
     public Frog getFrog1() {
@@ -76,5 +96,25 @@ public class StateChange {
                 ", frog2=" + frog2 +
                 ", time=" + time +
                 '}';
+    }
+
+    public List<Car> getCarRemoval() {
+        return carRemoval;
+    }
+
+    public boolean hasFrog1Deaths() {
+        return frog1deaths >= 0;
+    }
+    
+    public boolean hasFrog2Deaths() {
+        return frog2deaths >= 0;
+    }
+
+    public boolean hasFrog1Scores() {
+        return frog1scores >= 0;
+    }
+    
+    public boolean hasFrog2Scores() {
+        return frog2scores >= 0;
     }
 }

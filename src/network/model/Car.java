@@ -4,31 +4,24 @@ import common.constants.AssetData;
 import common.constants.Assets;
 import network.model.enums.CarType;
 
-import static common.constants.Constants.FROG_SIZE;
-import static common.constants.Constants.FROG_HIT_BOX_CORRECTION;
-
-public class Car {
+public class Car implements Model {
 
     private final int id;
     private final double width;
     private final double height;
-    private final CarType carType;
-
+    private final CarType type;
+    
     private double speed;
     private double x;
     private double y;
-    private boolean spawn;
 
-    public Car(final int id) {
-        carType = Math.random() > 0.5d ? CarType.SEDAN : CarType.WAGON;
+    public Car(final int id, final CarType carType, final double speed) {
+        this.id = id;
+        this.speed = speed;
+        this.type = carType;
         final AssetData data = Assets.CARS.getCarsData(carType, speed > 0);
         width = data.getWidth();
         height = data.getHeight() - 2;
-        this.id = id;
-    }
-
-    public void setSpeed(double speed) {
-        this.speed = speed;
     }
 
     public void update() {
@@ -39,14 +32,7 @@ public class Car {
         this.x = x;
         this.y = y;
     }
-
-    public boolean hits(final Frog frog) {
-        return x < frog.getX() + FROG_SIZE - FROG_HIT_BOX_CORRECTION
-                && x + width > frog.getX() + FROG_HIT_BOX_CORRECTION
-                && y < frog.getY()
-                && y + height > frog.getY(); // simplify y
-    }
-    
+ 
     public void setX(final int x) {
         this.x = x;
     }
@@ -59,6 +45,7 @@ public class Car {
         return width;
     }
 
+    @Override
     public double getHeight() {
         return height;
     }
@@ -71,14 +58,6 @@ public class Car {
         return y;
     }
 
-    public void setSpawn(final boolean spawn) {
-        this.spawn = spawn;
-    }
-
-    public boolean isSpawn() {
-        return spawn;
-    }
-    
     public boolean leftToRight() {
         return speed > 0;
     }
@@ -92,6 +71,18 @@ public class Car {
     }
 
     public CarType getType() {
-        return carType;
+        return type;
+    }
+    
+    public boolean isMovingToTheRight() {
+        return speed > 0;
+    }
+
+    public double getSpeed() {
+        return speed;
+    }
+
+    public void setSpeed(final double speed) {
+        this.speed = speed;
     }
 }

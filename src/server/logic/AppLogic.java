@@ -59,8 +59,8 @@ public class AppLogic {
         }
     }
 
-    public int calculateScores(final int time, final int deaths) {
-        return (time * 5) + (FROG_LIVES - deaths) * 50;
+    public int calculateScores(final int deaths) {
+        return (FROG_LIVES - deaths) * 47;
     }
 
     private interface Task {

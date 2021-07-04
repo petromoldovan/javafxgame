@@ -148,7 +148,7 @@ public class Client implements Runnable {
             System.out.println("======joining roon");
 
             Room room = StartServer.roomManager.newRoom();
-            // add clients to the new room
+            // addCar clients to the new room
             room.addClient(opponent); // first client
             room.addClient(this); // second client who has found a match
 
@@ -217,7 +217,7 @@ public class Client implements Runnable {
         this.isLookingForMatch = false;
 
         Room room = StartServer.roomManager.newRoom();
-        // add clients to the new room
+        // addCar clients to the new room
         room.addClient(this);
 
         // send confirmation that clients joined the room with id

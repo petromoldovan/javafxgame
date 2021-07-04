@@ -54,7 +54,7 @@ public class StartServer {
 
                     // create new runnable object
                     Client client = new Client(s);
-                    // add client to the client manager
+                    // addCar client to the client manager
                     clientManager.addClient(client);
 
                     // execute runnable object

@@ -5,9 +5,9 @@ import network.entity.StateChange;
 import network.entity.enums.FrogMove;
 import network.model.Car;
 import network.model.Frog;
+import network.model.enums.CarType;
 
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -20,12 +20,14 @@ public class Road {
     private static final int SYNC_MS = 700;
 
     private final int width;
-    private final int blockSize;
-    private final List<Car> cars;
+    private final List<LinkedList<Car>> cars = new ArrayList<>(SIZE);
     private final double[] carSpeed = new double[SIZE];
+    private final int[] blockedDirection = new int[SIZE];
     private final int[] lineY = new int[SIZE];
     private final AtomicInteger frog1deaths = new AtomicInteger(0);
     private final AtomicInteger frog2deaths = new AtomicInteger(0);
+    private final AtomicInteger frog1scores = new AtomicInteger(0);
+    private final AtomicInteger frog2scores = new AtomicInteger(0);
     private Frog frog1;
     private Frog frog2;
     private final AtomicInteger frog1DeathTimer = new AtomicInteger(0);
@@ -34,81 +36,131 @@ public class Road {
     private final AtomicBoolean frog2DeathTimerActive = new AtomicBoolean(false);
     private final AtomicInteger roundTimer = new AtomicInteger(Constants.GAME_TIME * 1000);
     private final AtomicInteger roundTimerSync = new AtomicInteger(Constants.GAME_TIME * 1000 + SYNC_MS);
-    private volatile double frog1x;
-    private volatile double frog1y;
-    private volatile double frog2x;
-    private volatile double frog2y;
-    private final AtomicBoolean frog1moves = new AtomicBoolean(false);
-    private final AtomicBoolean frog2moves = new AtomicBoolean(false);
-
-    {
-        int i = -1;
-        carSpeed[++i] = -0.5;
-        carSpeed[++i] = 0.5;
-        carSpeed[++i] = -0.5;
-        carSpeed[++i] = 0.5;
-        carSpeed[++i] = -0.5;
-
-        carSpeed[++i] = -0.2;
-        carSpeed[++i] = 0.8;
-        carSpeed[++i] = -0.3;
-        carSpeed[++i] = 0.4;
-        carSpeed[++i] = -0.5;
-        
-        for (i = 0; i < carSpeed.length; i++) {
-            carSpeed[i] = carSpeed[i] * Constants.CAR_SPEED_MODIFIER;
-        }
-    }
+    private volatile StateChange externalChange;
+    private final ThreadLocal<Random> random = ThreadLocal.withInitial(() -> new Random(System.nanoTime()));
 
     public Road(int blockSize, int width) {
         this.width = width;
-        this.blockSize = blockSize;
-        cars = new CopyOnWriteArrayList<>();
+        for (int i = 0; i < SIZE; i++) {
+            cars.add(new LinkedList<>());
+        }
         lineY[0] = TOP_ROAD_START;
         for (int i = 1; i < MIDDLE; i++) {
-            lineY[i] = lineY[i - 1] + blockSize;
+            final int y = lineY[i - 1] + blockSize;
+            lineY[i] = y;
         }
         lineY[MIDDLE] = BOTTOM_ROAD_START;
         for (int i = MIDDLE + 1; i < SIZE; i++) {
-            lineY[i] = lineY[i - 1] + blockSize;
+            final int y = lineY[i - 1] + blockSize;
+            lineY[i] = y;
         }
     }
 
-    public void add(Car car, int line) {
-        car.setSpeed(carSpeed[line]);
-        car.setPosition(-car.getWidth() - 1, lineY[line]);
-        cars.add(car);
+    public void addCar(final int id) {
+        final Random rnd = random.get();
+//        Optional<CarType> typeOpt = CarType.random(rnd);
+//        if (typeOpt.isEmpty()) return;
+//        CarType type = typeOpt.get();
+        CarType type = CarType.random(rnd);
+        int line = rnd.nextInt(SIZE);
+        Car car = new Car(id, type, rnd.nextDouble() > 0.5 ? type.getSpeed() : -type.getSpeed());
+        car.setPosition(car.isMovingToTheRight() ? -car.getWidth() : WIDTH, lineY[line]);
+        LinkedList<Car> carsOnLine = cars.get(line);
+        if (car.isMovingToTheRight()) {
+            if (carSpeed[line]>=0) {
+                Car left = carsOnLine.isEmpty() ? null : carsOnLine.getFirst();
+                if (blockedDirection[line]<=0 && !car.overlapsOnTheLeft(left)) {
+                    double newSpeed = carSpeed[line]==0 
+                            ? car.getSpeed() 
+                            : Math.min(car.getSpeed(), carSpeed[line]);
+                    car.setSpeed(newSpeed);
+                    carSpeed[line] = newSpeed;
+                    blockedDirection[line] = 0;
+                    carsOnLine.addFirst(car);
+                }
+            } else {
+                blockedDirection[line] = -1;
+            }
+        } else {
+            if (carSpeed[line]<=0) {
+                Car right = carsOnLine.isEmpty() ? null : carsOnLine.getLast();
+                if (blockedDirection[line]>=0 && !car.overlapsOnTheRight(right)) {
+                    double newSpeed = carSpeed[line]==0 
+                            ? car.getSpeed() 
+                            : Math.max(car.getSpeed(), carSpeed[line]);
+                    car.setSpeed(newSpeed);
+                    carSpeed[line] = newSpeed;
+                    blockedDirection[line] = 0;
+                    carsOnLine.addLast(car);
+                }
+            } else {
+                blockedDirection[line] = 1;
+            }
+        }
     }
 
     public StateChange update() {
-        StateChange change = new StateChange();
-        for (Car car : cars) {
-            int x = (int) car.getX();
-            if (x < -car.getWidth()) {
-                car.setX(width);
-                car.setSpawn(true);
-            } else if (x > width) {
-                car.setX(-blockSize);
-                car.setSpawn(true);
-            } else {
-                car.setSpawn(false);
+        List<Car> removal = new ArrayList<>();
+        for (int line = 0; line < SIZE; line++) {
+            removal.clear();
+            LinkedList<Car> carsOnLine = cars.get(line);
+            for (Car car : carsOnLine) {
+                double x = car.getX();
+                if (x < -car.getWidth() || x > width) {
+                    car.setX(width);
+                    removal.add(car);
+                } else {
+                    car.update();
+                }
             }
-            car.update();
+            carsOnLine.removeAll(removal);
+            if (carsOnLine.isEmpty()) {
+                carSpeed[line] = 0;
+            } else {
+                if (carsOnLine.getFirst().getSpeed() > 0) {
+                    final OptionalDouble min = carsOnLine.stream().mapToDouble(Car::getSpeed).min();
+                    carSpeed[line] = min.orElse(0);
+                } else {
+                    final OptionalDouble max = carsOnLine.stream().mapToDouble(Car::getSpeed).max();
+                    carSpeed[line] = max.orElse(0);
+                }
+            }
         }
-        change.getCars().addAll(cars);
-        if (frog1moves.get()) {
-            frog1.set(frog1x, frog1y);
-            frog1moves.set(false);
-            change.setFrog1(frog1);
+        StateChange change = new StateChange();
+        change.getCarRemoval().addAll(removal);
+        for (int i = 0; i < SIZE; i++) {
+            change.getCars().addAll(cars.get(i));
         }
-        if (frog2moves.get()) {
-            frog2.set(frog2x, frog2y);
-            frog2moves.set(false);
-            change.setFrog2(frog2);
+        if (externalChange != null) {
+            Frog frog1change = externalChange.getFrog1();
+            if (frog1change != null) {
+                frog1.set(frog1change.getX(), frog1change.getY());
+                change.setFrog1(frog1);
+            }
+            if (externalChange.hasFrog1Deaths()) {
+                change.setFrog1deaths(externalChange.getFrog1deaths());
+            }
+            Frog frog2change = externalChange.getFrog2();
+            if (frog2change != null) {
+                frog2.set(frog2change.getX(), frog2change.getY());
+                change.setFrog2(frog2);
+            }
+            if (externalChange.hasFrog2Deaths()) {
+                change.setFrog2deaths(externalChange.getFrog2deaths());
+            }
+            if (externalChange.hasFrog1Scores()) {
+                change.setFrog1scores(externalChange.getFrog1scores());
+            }
+            if (externalChange.hasFrog2Scores()) {
+                change.setFrog2scores(externalChange.getFrog2scores());
+            }
+            externalChange = null; // frog can move only in 1 game tick
         }
-        for (Car car : cars) {
-            frogCarInteraction(frog1, change, car);
-            frogCarInteraction(frog2, change, car);
+        for (int i = 0; i < SIZE; i++) {
+            for (Car car : cars.get(i)) { //todo frog line
+                frogCarInteraction(frog1, change, car);
+                frogCarInteraction(frog2, change, car);
+            }   
         }
         if (!frog1DeathTimerActive.get() && !frog2DeathTimerActive.get()) {
             // time is out
@@ -123,6 +175,7 @@ public class Road {
             roundTimerSync.set(roundTimer.get() - SYNC_MS);
             change.setTime(roundTimer.get());
         }
+        if (change.hasFrog1Deaths() || change.hasFrog2Deaths()) System.out.println(change);
         return change;
     }
 
@@ -151,13 +204,13 @@ public class Road {
         if (null == frog) return;
         frog.setDead(true);
         if (frog.isFirst()) {
-            int lives = frog1deaths.incrementAndGet();
-            change.setFrog1deaths(lives);
+            int deaths = frog1deaths.incrementAndGet();
+            change.setFrog1deaths(deaths);
             startDeathTimer(frog1DeathTimerActive, frog1DeathTimer);
             if (frog2 != null) frog2.set(START_X2, START_Y);
         } else {
-            int lives = frog2deaths.incrementAndGet();
-            change.setFrog2deaths(lives);
+            int deaths = frog2deaths.incrementAndGet();
+            change.setFrog2deaths(deaths);
             startDeathTimer(frog2DeathTimerActive, frog2DeathTimer);
             frog1.set(START_X1, START_Y);
         }
@@ -173,21 +226,21 @@ public class Road {
         deathTimer.set(Constants.FROG_DEAD_TIME);
     }
 
-    public boolean updateFrog(boolean first, FrogMove move) {
-        boolean result = false;
+    public void updateFrog(boolean first, FrogMove move) {
         Frog frog = getFrog(first);
-        if (frog1DeathTimerActive.get() || frog2DeathTimerActive.get() || isMoving(frog)) return result;
+        if (frog1DeathTimerActive.get() || frog2DeathTimerActive.get() || externalChange!=null) return;
         double x = frog.getX();
         double y = frog.getY();
 //        System.out.printf("Frog x=%f y=%f\n", x, y);
         boolean changed = false;
+        StateChange change = new StateChange();
         switch (move) {
             case UP:
                 y = y - BLOCK_SIZE;
                 changed = true;
-                if (y <= FINISH) {
-                    // win condition met
-                    result = true;
+                if (y < FINISH) {
+                    setDead(first ? frog2 : frog1, change);
+                    setScores(first, Constants.FINISH_SCORE, change);
                 }
                 break;
             case DOWN:
@@ -203,25 +256,22 @@ public class Road {
                 if (x < WIDTH - FROG_SIZE) changed = true;
                 break;
         }
-        if (!changed) return result;
+        if (!changed) return;
         if (first) {
-            synchronized (frog1moves) {
-                frog1x = x;
-                frog1y = y;
-                frog1moves.set(true);
-            }
+            frog1.set(x, y);
+            change.setFrog1(frog1); 
         } else {
-            synchronized (frog2moves) {
-                frog2x = x;
-                frog2y = y;
-                frog2moves.set(true);
-            }
+            frog2.set(x, y);
+            change.setFrog2(frog2);
         }
-        return result;
+        externalChange = change;
     }
 
-    private boolean isMoving(final Frog frog) {
-        return frog == frog1 ? frog1moves.get() : frog2moves.get();
+    private void setScores(final boolean first, final int score, final StateChange change) {
+        if (first) {
+            change.setFrog1scores(frog1scores.accumulateAndGet(score, Integer::sum));
+            if (frog2 == null) change.setFrog2deaths(FROG_LIVES);
+        } else change.setFrog2scores(frog2scores.accumulateAndGet(score, Integer::sum));
     }
 
     private Frog getFrog(final boolean first) {

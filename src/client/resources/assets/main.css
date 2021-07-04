@@ -1,34 +1,1 @@
-.root {
-    /*main-bg-from: #ab2f28;*/
-    /*main-bg-to: #722422;*/
-    /*bg-main-title: #d9413c;*/
-    bg-color: #6ab535;
-    fg-color: #ffffff;
-    /*fg-color-dark: fg-color;*/
-    /*bg-color-selected: #937479;*/
-    /*bg-color-light: #cb7673;*/
-    /*c-green: #67ae33;*/
-    /*c-purple: #2d3a6f;*/
-    /*c-blue: #3c95c3;*/
-    /*c-red: #e93f34;*/
-    /*c-black: black;*/
-    /*  base colors */
-    -fx-base: fg-color;
-    -fx-background: bg-color;
-    /*-fx-control-inner-background: bg-color-light;*/
-    /*-fx-accent: bg-color-selected;*/
-    /*-fx-focus-color: fg-color;*/
-    /* text colors */
-    /*-fx-dark-text-color: fg-color-dark;*/
-    /*-fx-mid-text-color: fg-color;*/
-    /*-fx-light-text-color: fg-color;*/
-    /* font */
-    /*-fx-font-family: "Helvetica";*/
-    /*bold: 800;*/
-}
-
-.title {
-    -fx-dark-text-color: #ffffff;
-    -fx-font-size: 16pt;
-    -fx-effect: dropshadow(gaussian, #6b6b6b, 1, 1.0, 1, 1);
-}
+.root {    /*main-bg-from: #ab2f28;*/    /*main-bg-to: #722422;*/    /*bg-main-title: #d9413c;*/    bg-color: #6ab535;    fg-color: #ffffff;    /*fg-color-dark: fg-color;*/    /*bg-color-selected: #937479;*/    /*bg-color-light: #cb7673;*/    /*c-green: #67ae33;*/    /*c-purple: #2d3a6f;*/    /*c-blue: #3c95c3;*/    /*c-red: #e93f34;*/    /*c-black: black;*/    /*  base colors */    -fx-base: fg-color;    -fx-background: bg-color;    /*-fx-control-inner-background: bg-color-light;*/    /*-fx-accent: bg-color-selected;*/    /*-fx-focus-color: fg-color;*/    /* text colors */    /*-fx-dark-text-color: fg-color-dark;*/    /*-fx-mid-text-color: fg-color;*/    /*-fx-light-text-color: fg-color;*/    /* font */    /*-fx-font-family: "Helvetica";*/    /*bold: 800;*/}.title {    -fx-dark-text-color: #ffffff;    -fx-font-size: 16pt;    -fx-effect: dropshadow(gaussian, #6b6b6b, 1, 1.0, 1, 1);}/* import fonts */@font-face {    font-family: "Showcard Gothic";    /*font-style: normal;*/    /*font-weight: 400;*/    src: url("SHOWG.TTF");}/* Set fonts */.button{    -fx-font-size: 18px;    -fx-font-family: "Showcard Gothic";    /*-fx-font-weight: 50;*/    /*-fx-text-fill: #09f;*/    -fx-text-fill: white;    -fx-background-color: #aad35d;}.label{    -fx-font-size: 14px;    -fx-font-family: "Showcard Gothic";    /*-fx-font-weight: 50;*/    /*-fx-text-fill: #09f;*/    -fx-text-fill: green;}#registration, #loginlabel{    -fx-font-size: 20px;    -fx-text-fill: white;}#username, #password{    -fx-font-size: 14px;    -fx-text-fill: grey;}#textfield {    -fx-font-family: "Lato";    -fx-text-fill: black;}

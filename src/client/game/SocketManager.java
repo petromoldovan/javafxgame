@@ -1,17 +1,12 @@
 package client.game;
 
 import client.StartClient;
-import client.controller.GameController;
 import client.game.model.Player;
 import client.screen.AppScreen;
 import com.google.gson.Gson;
 import common.constants.ActionTypes;
 import javafx.application.Platform;
-import network.entity.FrogMovementRequest;
-import network.entity.LoginResponse;
-import network.entity.RegistrationResponse;
-import network.entity.Scores;
-import network.entity.StateChange;
+import network.entity.*;
 import network.entity.enums.FrogMove;
 
 import java.io.DataInputStream;
@@ -294,7 +289,7 @@ public class SocketManager {
 //                        StartClient.getGameController().setX1(splitted[7]);
 //                        StartClient.getGameController().setY1(splitted[8]);
 //
-//                        // add second player
+//                        // addCar second player
 //                        if (!player2ID.equals("")) {
 //                            StartClient.getGameController().setX2(splitted[9]);
 //                            StartClient.getGameController().setY2(splitted[10]);

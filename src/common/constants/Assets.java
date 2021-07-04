@@ -32,11 +32,30 @@ public enum Assets {
         int height = 51;
         int assetIndex;
         switch (type) {
-            case WAGON:
+            case RED:
                 assetIndex = 1;
                 break;
-            case SEDAN: 
+            case YELLOW: 
                 assetIndex = 2;
+                break;
+            case BLUE:
+                assetIndex = 3;
+                width = 110;
+                break;
+            case BLUE_RED:
+                assetIndex = 4;
+                width = 103;
+                break;
+            case YELLOW_STRIPE:
+                assetIndex = 5;
+                break;
+            case POLICE:
+                assetIndex = 6;
+                width = 100;
+                break;
+            case TRUCK:
+                assetIndex = 7;
+                width = 182;
                 break;
             default: throw new IllegalArgumentException("Unknown car type " + type);
         }

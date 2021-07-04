@@ -128,8 +128,7 @@ public class Room {
     public void updateClientPosition(String clientID, FrogMove move) {
 //        System.out.printf("clientId [%s] c1 [%s] c2 [%s]\n", clientID, c1==null ? null : c1.getID(), c2==null ? null : c2.getID());
         boolean isFirst = isFirstPlayer(clientID);
-        boolean win = engine.updatePlayer(isFirst, move);
-        if (win) onWin(isFirst);
+        engine.updatePlayer(isFirst, move);
     }
 
     private void onWin(final boolean first) {
@@ -189,10 +188,8 @@ public class Room {
     }
 
     private void onWin(final boolean first, final Client winner, final Client loser) {
-//        int time = remainingGameTime.get();
-        int time = 5; //todo fix
         int deaths = engine.getFrogDeaths(first);
-        final int scores = Server.getLogic().calculateScores(time, deaths);
+        final int scores = Server.getLogic().calculateScores(deaths);
         if (null != winner) {
             Server.getLogic().saveScores(winner.getUsername(), scores);
             winner.winGame();

@@ -11,12 +11,15 @@ import common.constants.Constants;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
@@ -28,16 +31,13 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
-import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import javafx.util.StringConverter;
 import network.entity.StateChange;
 import network.entity.enums.FrogMove;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 import static common.constants.Constants.*;
 
@@ -49,10 +49,11 @@ public class GameController {
     private final SocketManager socketManager = StartClient.getSocketManager();
     private Pane root;
     private final DoubleProperty timeLeft = new SimpleDoubleProperty(GAME_TIME);
+    private final IntegerProperty frog1score = new SimpleIntegerProperty(0);
+    private final IntegerProperty frog2score = new SimpleIntegerProperty(0);
     private HBox rightLives;
     private HBox leftLives;
     private volatile boolean moving = false;
-    private HBox hBox;
 
     public static void setPlayer1(Player p) {
     }
@@ -74,6 +75,7 @@ public class GameController {
     private void onChange(final StateChange change) {
         updateFrog(change.getFrog1(), change);
         updateFrog(change.getFrog2(), change);
+        List<Car> list = new ArrayList<>(20);
         change.getCars().forEach(each -> {
             final int id = each.getId();
             final double x = each.getX();
@@ -81,15 +83,29 @@ public class GameController {
             Car car = carMap.get(id);
             if (car == null) {
                 car = new Car(Assets.CARS.getCarsData(each.getType(), each.leftToRight()));
-                root.getChildren().add(car);
                 carMap.put(id, car);
                 car.set(x, y);
                 car.draw();
+                list.add(car);
             } else {
                 car.move(x, y);
             }
         });
-        if (change.hasTime()) setTimeLeft((double) change.getTime() / (GAME_TIME * 1000));    
+        root.getChildren().addAll(list);
+        list.clear();
+        change.getCarRemoval().forEach(car -> {
+            final Car remove = carMap.remove(car.getId());
+            list.add(remove);
+        });
+        root.getChildren().removeAll(list);
+        if (change.hasTime()) setTimeLeft((double) change.getTime() / (GAME_TIME * 1000));
+//        if (change.hasFrog1Scores()) {
+//            frog1score.setValue(change.getFrog1scores());
+//            showMessage(String.format("YOUR SCORE: %d", change.getFrog1scores()));
+//        } else if (change.hasFrog2Scores()) {
+//            frog2score.setValue(change.getFrog2scores());
+//            showMessage(String.format("YOUR SCORE: %d", change.getFrog2scores()));
+//        }
     }
 
     private void updateFrog(network.model.Frog newFrog, StateChange change) {
@@ -168,6 +184,7 @@ public class GameController {
 
     public void show() {
         Scene scene = new Scene(new Pane(), WIDTH, HEIGHT);
+        scene.getStylesheets().add(ASSETS + "/main.css");
         stage = new Stage();
         stage.setScene(scene);
         stage.show();
@@ -184,11 +201,31 @@ public class GameController {
         
         ProgressBar time = new ProgressBar(1);
         time.progressProperty().bindBidirectional(timeLeft);
-        
+
+        Label scores1 = new Label();
+        Label scores2 = new Label();
+        StringConverter<Number> converter = new StringConverter<>() {
+            @Override
+            public String toString(final Number number) {
+                return String.valueOf(number);
+            }
+
+            @Override
+            public Number fromString(final String s) {
+                return Integer.parseInt(s);
+            }
+        };
+        scores1.textProperty().bindBidirectional(frog1score, converter);
+        scores2.textProperty().bindBidirectional(frog2score, converter);
+
         BorderPane pane = new BorderPane();
         pane.setPrefWidth(WIDTH);
         pane.setPadding(new Insets(10));
-        pane.setCenter(time);
+        final BorderPane node = new BorderPane();
+        node.setLeft(scores1);
+        node.setCenter(time);
+        node.setRight(scores2);
+        pane.setCenter(node);
 
         leftLives = new HBox(newLives("/client/resources/assets/live.png"));
         leftLives.setPrefWidth(LIVE_WIDTH);
@@ -220,34 +257,27 @@ public class GameController {
     
     public void showMessage(String message) {
         Platform.runLater(() -> {
-            hBox = new HBox();
-            hBox.setTranslateX( (WIDTH / 2d) - 130 );
-            hBox.setTranslateY(HEIGHT / 2d);
-            final VBox vBox = new VBox(hBox);
+            final VBox vBox = new VBox();
             vBox.setAlignment(Pos.CENTER);
             vBox.setPrefWidth(WIDTH);
+            vBox.setTranslateY(HEIGHT / 2d);
             root.getChildren().add(vBox);
-            
-            for (int i = 0; i < message.length(); i++) {
-                char letter = message.charAt(i);
-                Text text = new Text(String.valueOf(letter));
-                text.setOpacity(0);
-                text.setStyle("-fx-dark-text-color: #ffffff;");
-                text.setFont(Font.font("Letter Magic", 60));
-                DropShadow shadow = new DropShadow(40, Color.BLACK);
-                text.setEffect(shadow);
-                hBox.getChildren().add(text);
-                FadeTransition ft = new FadeTransition(Duration.seconds(0.66), text);
-                ft.setToValue(1);
-                ft.setDelay(Duration.seconds(i * 0.15));
-                ft.play();
-            }
+            Label label = new Label(message);
+            label.setOpacity(0);
+            label.setFont(Font.font("Showcard Gothic", 60));
+            label.setTextFill(Color.WHITE);
+            DropShadow shadow = new DropShadow(30, Color.GREY);
+            shadow.setOffsetX(-15.0);
+            shadow.setOffsetY(15.0);
+            label.setEffect(shadow);
+            vBox.getChildren().add(label);
+            FadeTransition ft = new FadeTransition(Duration.seconds(0.66), label);
+            ft.setToValue(1);
+            ft.play();
             new Timer().schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    Platform.runLater(() -> {
-                        if (hBox != null) hBox.setVisible(false);
-                    });
+                    Platform.runLater(() ->root.getChildren().remove(vBox));
                 }
             }, Constants.FROG_DEAD_TIME);
         });

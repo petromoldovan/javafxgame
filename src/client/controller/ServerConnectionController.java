@@ -1,31 +1,33 @@
 package client.controller;
 
 import client.StartClient;
+import client.screen.AppScreen;
+import client.utils.Run;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.Scene;
 import javafx.scene.control.TextField;
-import server.StartServer;
 
 public class ServerConnectionController {
+    
+    @FXML
     public TextField hostField;
+    
+    @FXML
     public TextField portField;
 
-//    public ServerConnectionController() {
-//        this.hostField.setV("127.0.0.1");
-//        this.portField.setText("5656");
-//    }
-
     @FXML
-    private void handleButtonAction (ActionEvent event) throws Exception {
-        String host = "";
-        int port = 0;
+    private void handleButtonAction (ActionEvent unused) {
+        Run.safe(this::connect);
+    }
 
+    private void connect() {
+        String host;
+        int port;
         // validate entries
         try {
             host = hostField.getText();
             port = Integer.parseInt(portField.getText());
-            if (host.equalsIgnoreCase("")) {
+            if (host.isBlank()) {
                 throw new Exception("invalid host");
             }
 
@@ -33,32 +35,22 @@ public class ServerConnectionController {
                 throw new Exception("invalid port");
             }
         } catch (Exception e) {
-            System.out.println("ERROR: ServerConnectionController#handleButtonAction" + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException(e);
         }
-
         System.out.println("port" + port);
         System.out.println("host " + host);
-
         // try to connect to server
         connectToServer(host, port);
     }
 
     private void connectToServer(String host, int port) {
-        new Thread(() -> {
-           System.out.println("trying to connect...");
-
-           if (StartClient.socketManager.connect(host, port)) {
-               System.out.println("SUCCESS");
-               next();
-           } else {
-               System.out.println("FAILURE");
-           }
-        })
+        new Thread(() -> Run.safe(() -> {
+            System.out.println("trying to connect...");
+            StartClient.getSocketManager().connect(host, port);
+            System.out.println("SUCCESS");
+            AppScreen.HOME.goFrom(ServerConnectionController.class);
+        }))
         .start();
-    }
-
-    private void next() {
-        ScreenController screenController = ScreenController.getInstance();
-        screenController.activate("registrationScreen");
     }
 }

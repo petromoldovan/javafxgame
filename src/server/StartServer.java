@@ -3,18 +3,21 @@ package server;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.SQLException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import server.controller.Client;
 import server.controller.ClientManager;
 import server.controller.RoomManager;
+import server.database.Database;
 
 public class StartServer {
     public static ServerSocket serverSocket;
     public static ClientManager clientManager;
     public static RoomManager roomManager;
     public static boolean isServerRunning = true;
+    private static Database database;
 
     public static void main(String[] args) {
         new StartServer();
@@ -22,6 +25,9 @@ public class StartServer {
 
     public StartServer () {
         try {
+            database = new Database();
+            database.create();
+            
             int PORT = 5656;
 
             // create server
@@ -55,13 +61,17 @@ public class StartServer {
                     // execute runnable object
                     executor.execute(client);
                 } catch (IOException e) {
-                    System.out.println("ERROR: StartServer#mainLoop#" + e.getMessage());
+                    e.printStackTrace();
                 }
             }
 
 
-        } catch (IOException e) {
-            System.out.println("ERROR: StartServer#" + e.getMessage());
+        } catch (IOException | SQLException e) {
+            e.printStackTrace();
         }
+    }
+
+    public static Database getDatabase() {
+        return database;
     }
 }

@@ -5,12 +5,11 @@ import javafx.fxml.FXML;
 
 public class BoardController {
     @FXML
-    private void handleButtonAction (ActionEvent event) throws Exception {
+    private void handleButtonAction (ActionEvent event) {
         next();
     }
 
-    private void next() throws Exception {
-        ScreenController screenController = ScreenController.getInstance();
-        screenController.activate("playground");
+    private void next() {
+        //todo playground
     }
 }

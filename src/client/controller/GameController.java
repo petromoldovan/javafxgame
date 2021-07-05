@@ -1,14 +1,10 @@
 package client.controller;
 
 import client.StartClient;
-import client.controller.ScreenController;
-import client.controller.SocketManager;
-import client.model.Player;
+import client.game.model.Car;
+import client.game.model.Player;
+import client.screen.AppScreen;
 import javafx.animation.AnimationTimer;
-import javafx.animation.FadeTransition;
-import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -21,23 +17,29 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import javafx.util.Duration;
-import server.StartServer;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 public class GameController {
-    private Scene scene;
+    
+    public static int WIDTH = 800;
+    public static int HEIGHT = 800;
+    private static Stage stage;
+
     public void show() {
-        StartClient.window.setScene(scene);
+        Scene scene = new Scene(new Pane(), WIDTH, HEIGHT);
+        stage = new Stage();
+        stage.setScene(scene);
+        stage.show();
+        AppScreen.hide();
     }
 
     private static AnimationTimer timer;
 
     private static Pane root;
-    private static List<Node> cars = new ArrayList<>();
+    private static List<Car> cars = new ArrayList<>();
 
     // FROG objects
     private static Node frog;
@@ -50,7 +52,7 @@ public class GameController {
 
     // SIZES
     private static int frogSize = 38;
-    private static int startPosition = StartClient.HEIGHT - 39;
+    private static int startPosition = HEIGHT - 39;
     private static int carHeight = 80;
     private static int carWidth = 80;
 
@@ -81,7 +83,7 @@ public class GameController {
 //            // noop
 //        }
 
-        root.setPrefSize(StartClient.WIDTH, StartClient.HEIGHT);
+        root.setPrefSize(WIDTH, HEIGHT);
 
         // textures
         File file = new File("src/client/resources/assets/sand.jpeg");
@@ -129,12 +131,12 @@ public class GameController {
                 continue;
             }
 
-            Rectangle road = new Rectangle(StartClient.WIDTH, carHeight, Color.RED);
+            Rectangle road = new Rectangle(WIDTH, carHeight, Color.RED);
             Image image = new Image("/client/resources/assets/road.jpeg");
             road.setFill(new ImagePattern(image));
 
             // set Y location
-            road.setTranslateY(i * carHeight - skipped * (carHeight/2));
+            road.setTranslateY(i * carHeight - skipped * (carHeight/2.0));
 
             root.getChildren().add(road);
         }
@@ -142,9 +144,10 @@ public class GameController {
 
     private static void onUpdate() {
         // update position of all cars
-        for (Node car : cars)
+        for (Node car : cars) {
             car.setTranslateX(car.getTranslateX() + 5);
-
+        }
+            
         // check for collision
         checkState();
     }
@@ -153,7 +156,7 @@ public class GameController {
         for (Node car : cars) {
             if (car.getBoundsInParent().intersects(controlledFrog.getBoundsInParent())) {
                 // reset frog position
-                StartClient.socketManager.resetGamePosition();
+                StartClient.getSocketManager().resetGamePosition();
             }
         }
 
@@ -202,7 +205,7 @@ public class GameController {
         //14 rows
         int skipped = 0;
         for (int i = 0; i < 12; i++) {
-            Rectangle rect = new Rectangle(carWidth, carHeight, Color.RED);
+            Car car = new Car(carWidth, carHeight, Color.RED);
             //place car for every second row
             if (i % 2 == 0) {
                 skipped++;
@@ -211,16 +214,14 @@ public class GameController {
 
             Image image = new Image("/client/resources/assets/car.png");
             ImagePattern imagePattern = new ImagePattern(image);
-            rect.setFill(imagePattern);
+            car.setFill(imagePattern);
 
             // set Y location
-            rect.setTranslateY(i * carHeight - skipped * (carHeight/2));
+            car.setTranslateY(i * carHeight - skipped * (carHeight/2.0));
 
-            root.getChildren().add(rect);
-            cars.add(rect);
+            root.getChildren().add(car);
+            cars.add(car);
         }
-
-        return;
     }
 
     public static void showGameOverMessage(boolean isTimeout) {
@@ -255,7 +256,7 @@ public class GameController {
 
         if (v == 0) {
             showGameOverMessage(true);
-            StartClient.socketManager.onGameTimeoutRequest();
+            StartClient.getSocketManager().onGameTimeoutRequest();
         }
     }
     public static void setX1(String v) {
@@ -286,11 +287,11 @@ public class GameController {
         return nextPosition.getBoundsInParent().intersects(opponentFrog.getBoundsInParent());
     }
 
-    public static void startGame() throws Exception{
-        Scene gameScreen = new Scene(createContent(), StartClient.WIDTH, StartClient.HEIGHT);
+    public static void startGame() {
+        Scene gameScreen = new Scene(createContent(), WIDTH, HEIGHT);
 
         // render registration scene
-        StartClient.window.setScene(gameScreen);
+        stage.setScene(gameScreen);
 
         // set the frog that the client is controlling
         controlledFrog = frog;
@@ -300,7 +301,7 @@ public class GameController {
             opponentFrog = frog;
         }
 
-        StartClient.window.getScene().setOnKeyPressed(event -> {
+        stage.getScene().setOnKeyPressed(event -> {
             int newX;
             int newY;
             switch (event.getCode()) {
@@ -314,7 +315,7 @@ public class GameController {
                     }
                     if (newY < 0) return;
                     // set new position
-                    StartClient.socketManager.updateGamePosition(newX, newY);
+                    StartClient.getSocketManager().updateGamePosition(newX, newY);
                     break;
                 case S:
                     newX = (int)controlledFrog.getTranslateX();
@@ -324,8 +325,8 @@ public class GameController {
                         return;
                     }
 
-                    if (newY > StartClient.HEIGHT) return;
-                    StartClient.socketManager.updateGamePosition(newX, newY);
+                    if (newY > HEIGHT) return;
+                    StartClient.getSocketManager().updateGamePosition(newX, newY);
                     break;
                 case A:
                     newX = (int)controlledFrog.getTranslateX() - 40;
@@ -335,7 +336,7 @@ public class GameController {
                         return;
                     }
                     if (newX < 0) return;
-                    StartClient.socketManager.updateGamePosition(newX, newY);
+                    StartClient.getSocketManager().updateGamePosition(newX, newY);
                     break;
                 case D:
                     newX = (int)controlledFrog.getTranslateX() + 40;
@@ -344,8 +345,8 @@ public class GameController {
                     if (arePlayersColliding(newX, newY)) {
                         return;
                     }
-                    if (newX >= StartClient.WIDTH) return;
-                    StartClient.socketManager.updateGamePosition(newX, newY);
+                    if (newX >= WIDTH) return;
+                    StartClient.getSocketManager().updateGamePosition(newX, newY);
                     break;
                 default:
                     break;

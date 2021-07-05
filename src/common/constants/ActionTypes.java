@@ -9,6 +9,7 @@ public class ActionTypes {
     public enum ActionType {
         INVALID,
         LOGIN_USER,
+        REGISTER_USER,
         FIND_MATCH,
         JOIN_ROOM,
         CURRENT_GAME_DATA_RESPONSE,
@@ -16,7 +17,8 @@ public class ActionTypes {
         START_SINGLE_MATCH_REQUEST,
         RESET_GAME_POSITION_REQUEST,
         GAME_EVENT_TIMEOUT,
-        GAME_EVENT_WIN
+        GAME_EVENT_WIN,
+        SCORES
     }
 
     public static ActionType getActionTypeFromMessage(String message) {
@@ -25,7 +27,7 @@ public class ActionTypes {
         try {
             type = Enum.valueOf(ActionTypes.ActionType.class, message.split(";")[0]);
         } catch (Exception e) {
-            System.out.println("ERROR: getActionTypeFromMessage#" + e.getMessage());
+            e.printStackTrace();
         }
 
         return type;

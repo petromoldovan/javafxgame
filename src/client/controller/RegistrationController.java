@@ -1,38 +1,84 @@
 package client.controller;
 
 import client.StartClient;
-import javafx.event.ActionEvent;
+import client.logic.Client;
+import network.entity.LoginResponse;
+import network.entity.RegistrationResponse;
+import client.screen.AppScreen;
+import client.utils.Run;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 
 public class RegistrationController {
-    public TextField passwordField;
-    public TextField usernameField;
 
     @FXML
-    private Button submitBtn;
+    private TextField usernameField;
+    
+    @FXML
+    private TextField passwordField;
 
     @FXML
-    private void handleButtonAction (ActionEvent event) {
-        System.out.println("trying to login...");
+    private Button register;
+    
+    @FXML
+    private Button cancel;
 
-        // todo: validate input
-
-        StartClient.socketManager.login(usernameField.getText(), passwordField.getText());
-
-//        if ()) {
-//            System.out.println("SUCCESS");
-//            next();
-//        } else {
-//            System.out.println("FAILURE");
-//        }
-//
-//        next();
+    @FXML
+    private void register() {
+        disable(true);
+        Run.safe(() -> 
+                StartClient.getSocketManager().registerUser(
+                        usernameField.getText(), 
+                        passwordField.getText(), 
+                        this::onRegister
+                ), 
+                this::onError
+        );
     }
 
-//    private void next() {
-//        ScreenController screenController = ScreenController.getInstance();
-//        screenController.activate("playgroundScreen");
-//    }
+    private void onRegister(final RegistrationResponse response) {
+        switch (response.getCode()) {
+            case SUCCESS:
+                StartClient.getSocketManager().login(
+                        usernameField.getText(),
+                        passwordField.getText(),
+                        RegistrationController.class,
+                        this::onLogin
+                );
+                break;
+            case ERROR:
+                Platform.runLater(() -> {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Error");
+                    alert.setHeaderText("Error");
+                    alert.setContentText("Registration failed: " + response.getError());
+                    alert.showAndWait();
+                });
+                break;
+        }
+        disable(false);
+    }
+
+    private void onLogin(final LoginResponse response) {
+        Client.getAppLogic().processLoginResponse(response);
+    }
+
+    private void onError() {
+        Platform.runLater(() -> disable(false));
+    }
+
+    private void disable(final boolean disable) {
+        usernameField.setDisable(disable);
+        passwordField.setDisable(disable);
+        register.setDisable(disable);
+        cancel.setDisable(disable);
+    }
+
+    @FXML
+    public void cancel() {
+        AppScreen.back();
+    }
 }

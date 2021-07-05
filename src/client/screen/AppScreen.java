@@ -75,8 +75,11 @@ public enum AppScreen {
         });
     }
     
-    public static void hide() {
-        Platform.runLater(NAVIGATION::hide);
+    public static void show(Stage stage) {
+        Platform.runLater(() -> {
+            NAVIGATION.hide();
+            NAVIGATION.update(stage);
+        });
     }
     
     public static void back() {

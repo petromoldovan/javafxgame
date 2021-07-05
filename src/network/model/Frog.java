@@ -8,6 +8,7 @@ public class Frog implements Model {
     private double x;
     private double y;
     private boolean dead;
+    private boolean reset;
     
     public Frog(final boolean first, double x, double y) {
         this.first = first;
@@ -57,5 +58,13 @@ public class Frog implements Model {
                 ", y=" + y +
                 ", dead=" + dead +
                 '}';
+    }
+
+    public boolean isReset() {
+        return reset;
+    }
+
+    public void setReset(final boolean reset) {
+        this.reset = reset;
     }
 }

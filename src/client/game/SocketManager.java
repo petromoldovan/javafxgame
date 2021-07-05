@@ -23,7 +23,7 @@ public class SocketManager {
     
     private final Gson gson = new Gson(); 
     private final Map<ActionTypes.ActionType, Object> data = new ConcurrentHashMap<>();
-    private final ExecutorService pool = Executors.newCachedThreadPool();
+    private final ExecutorService pool = Executors.newFixedThreadPool(10);
     
     Socket socket;
     DataInputStream dataInputStream;
@@ -164,9 +164,9 @@ public class SocketManager {
     private void sendDataToServer(String data) {
         try {
             dataOutputStream.writeUTF(data);
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            throw new RuntimeException(t);
         }
     }
 
@@ -275,34 +275,6 @@ public class SocketManager {
         StateChange change = getResponse(message, StateChange.class);
         Platform.runLater(() -> StartClient.getGameController().onChangeState(change));
     }
-//    private String onCurrentGameDataResponse(String message) {
-//        String[] splitted = message.split(";");
-//        int timeLeft = Integer.parseInt(splitted[6]);
-//
-//        String player2ID = splitted[4];
-////        System.out.println("got data " + message);
-//        Platform.runLater(
-//                () -> {
-//                    try {
-//                        StartClient.getGameController().setTimeLeft(timeLeft);
-//                        // set player position
-//                        StartClient.getGameController().setX1(splitted[7]);
-//                        StartClient.getGameController().setY1(splitted[8]);
-//
-//                        // addCar second player
-//                        if (!player2ID.equals("")) {
-//                            StartClient.getGameController().setX2(splitted[9]);
-//                            StartClient.getGameController().setY2(splitted[10]);
-//                        }
-//
-//                    } catch (Exception e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//        );
-//
-//        return message;
-//    }
 
     public void showScores(RunnableWithResult<Scores> runnable) {
         sendRequest(runnable, ActionTypes.ActionType.SCORES);
@@ -324,19 +296,23 @@ public class SocketManager {
 
     @SuppressWarnings("unchecked")
     private <T> void sendRequest(final RunnableWithResult<T> runnable, final ActionTypes.ActionType actionType, String... requestData) {
-        pool.submit(() -> {
-            try {
-                final String request = createRequest(actionType, requestData);
-                sendDataToServer(request);
-                synchronized (actionType) {
-                    actionType.wait();
+        try {
+            pool.submit(() -> {
+                try {
+                    final String request = createRequest(actionType, requestData);
+                    sendDataToServer(request);
+                    synchronized (actionType) {
+                        actionType.wait();
+                    }
+                    final T result = (T) this.data.get(actionType);
+                    runnable.execute(result);
+                } catch (Throwable t) {
+                    t.printStackTrace();
                 }
-                final T result = (T) this.data.get(actionType);
-                runnable.execute(result);
-            } catch (Throwable t) {
-                t.printStackTrace();
-            }
-        });
+            });
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
     }
 
     private String createRequest(final ActionTypes.ActionType actionType, final String[] data) {

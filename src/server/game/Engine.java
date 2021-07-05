@@ -29,11 +29,11 @@ public class Engine {
 
     private void addFrogs(boolean twoFrogs) {
         StateChange change = new StateChange();
-        Frog frog1 = road.addFrog();
+        Frog frog1 = road.addFirstFrog();
         change.setFrog1(frog1);
         if (twoFrogs) {
-            Frog frog2 = road.addFrog();
-            change.setFrog1(frog2);
+            Frog frog2 = road.addSecondFrog();
+            change.setFrog2(frog2);
         }
         changeEvent.onChange(change);
     }

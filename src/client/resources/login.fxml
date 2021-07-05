@@ -1,44 +1,54 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
-<VBox alignment="TOP_CENTER" spacing="10.0" stylesheets="@assets/main.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.LoginController">
+<VBox id="loginscreen" alignment="TOP_CENTER" prefHeight="350.0" prefWidth="600.0" spacing="10.0" stylesheets="@assets/main.css" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.LoginController">
     <padding>
         <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
     </padding>
-    <VBox alignment="CENTER">
-        <padding>
-            <Insets top="50.0" />
-        </padding>
-        <ImageView fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true">
-            <Image url="@assets/logo.png" />
-        </ImageView>
-    </VBox>
-   <Label styleClass="title" text="LOGIN" />
+   <Label id="login-title" styleClass="title" text="LOGIN">
+      <VBox.margin>
+         <Insets top="80.0" />
+      </VBox.margin></Label>
     <GridPane>
         <columnConstraints>
-            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="70.0" />
-            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="115.0" minWidth="0.0" prefWidth="0.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="125.0" minWidth="0.0" prefWidth="0.0" />
          <ColumnConstraints />
         </columnConstraints>
         <rowConstraints>
+         <RowConstraints minHeight="10.0" prefHeight="25.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+         <RowConstraints minHeight="10.0" prefHeight="25.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
         </rowConstraints>
-        <Label text="Username:" GridPane.columnSpan="2" />
-        <TextField fx:id="username" promptText="Enter your name..." GridPane.columnIndex="1" GridPane.columnSpan="3" />
-        <Label text="Password:" GridPane.rowIndex="1" />
-        <PasswordField fx:id="password" promptText="Enter your password..." GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="1" />
+        <Label text="Username:" GridPane.columnSpan="2">
+         <GridPane.margin>
+            <Insets top="7.0" />
+         </GridPane.margin></Label>
+        <TextField fx:id="username" prefHeight="30.0" prefWidth="58.0" promptText="Enter your name..." GridPane.columnSpan="3" GridPane.rowIndex="1" />
+        <Label text="Password:" GridPane.rowIndex="2">
+         <GridPane.margin>
+            <Insets top="7.0" />
+         </GridPane.margin></Label>
+        <PasswordField fx:id="password" prefHeight="30.0" prefWidth="58.0" promptText="Enter your password..." GridPane.columnSpan="3" GridPane.rowIndex="3" />
+        <Button fx:id="login" mnemonicParsing="false" onAction="#login" prefWidth="140.0" text="Login" GridPane.columnSpan="2" GridPane.rowIndex="4">
+         <GridPane.margin>
+            <Insets left="1.0" top="20.0" />
+         </GridPane.margin></Button>
+        <Button fx:id="cancel" mnemonicParsing="false" onAction="#cancel" prefWidth="80.0" text="Back" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="4">
+         <GridPane.margin>
+            <Insets left="43.0" top="20.0" />
+         </GridPane.margin></Button>
+      <VBox.margin>
+         <Insets left="175.0" right="175.0" />
+      </VBox.margin>
     </GridPane>
     <HBox alignment="TOP_RIGHT" spacing="10.0">
         <VBox.margin>
             <Insets />
         </VBox.margin>
-        <Button fx:id="login" mnemonicParsing="false" onAction="#login" text="Login" />
-        <Button fx:id="cancel" mnemonicParsing="false" onAction="#cancel" text="Back" />
     </HBox>
 </VBox>

@@ -117,4 +117,12 @@ public class StateChange {
     public boolean hasFrog2Scores() {
         return frog2scores >= 0;
     }
+    
+    public boolean hasFrog1() {
+        return frog1 != null;
+    }
+    
+    public boolean hasFrog2() {
+        return frog2 != null;
+    }
 }

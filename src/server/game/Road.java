@@ -37,7 +37,9 @@ public class Road {
     private final AtomicInteger roundTimer = new AtomicInteger(Constants.GAME_TIME * 1000);
     private final AtomicInteger roundTimerSync = new AtomicInteger(Constants.GAME_TIME * 1000 + SYNC_MS);
     private volatile StateChange externalChange;
-    private final ThreadLocal<Random> random = ThreadLocal.withInitial(() -> new Random(System.nanoTime()));
+    private final Random random = new Random(System.nanoTime());
+    private boolean frog1reset;
+    private boolean frog2reset;
 
     public Road(int blockSize, int width) {
         this.width = width;
@@ -57,13 +59,12 @@ public class Road {
     }
 
     public void addCar(final int id) {
-        final Random rnd = random.get();
 //        Optional<CarType> typeOpt = CarType.random(rnd);
 //        if (typeOpt.isEmpty()) return;
 //        CarType type = typeOpt.get();
-        CarType type = CarType.random(rnd);
-        int line = rnd.nextInt(SIZE);
-        Car car = new Car(id, type, rnd.nextDouble() > 0.5 ? type.getSpeed() : -type.getSpeed());
+        CarType type = CarType.random(random);
+        int line = random.nextInt(SIZE);
+        Car car = new Car(id, type, random.nextDouble() > 0.5 ? type.getSpeed() : -type.getSpeed());
         car.setPosition(car.isMovingToTheRight() ? -car.getWidth() : WIDTH, lineY[line]);
         LinkedList<Car> carsOnLine = cars.get(line);
         if (car.isMovingToTheRight()) {
@@ -154,6 +155,7 @@ public class Road {
             if (externalChange.hasFrog2Scores()) {
                 change.setFrog2scores(externalChange.getFrog2scores());
             }
+            if (externalChange.hasTime()) change.setTime(externalChange.getTime());
             externalChange = null; // frog can move only in 1 game tick
         }
         for (int i = 0; i < SIZE; i++) {
@@ -176,6 +178,22 @@ public class Road {
             change.setTime(roundTimer.get());
         }
         if (change.hasFrog1Deaths() || change.hasFrog2Deaths()) System.out.println(change);
+        if (frog1reset) {
+            frog1.setReset(true);
+            change.setFrog1(frog1);
+            frog1reset = false;
+        } else {
+            frog1.setReset(false);
+        }
+        if (null != frog2) {
+            if (frog2reset) {
+                frog2.setReset(true);
+                change.setFrog2(frog2);
+                frog2reset = false;
+            } else {
+                frog2.setReset(false);
+            }
+        }
         return change;
     }
 
@@ -185,11 +203,11 @@ public class Road {
             timer.accumulateAndGet(-Constants.GAME_TICK_TIMER, Integer::sum);
         } else {
             frog.setDead(false);
-            frog1.set(START_X1, START_Y);
+            resetFrog1();
             change.setFrog1(frog1);
             if (null != frog2) {
+                resetFrog2();
                 change.setFrog2(frog2);
-                frog2.set(START_X2, START_Y);
             }
             active.set(false);
         }
@@ -203,22 +221,38 @@ public class Road {
     private void setDead(final Frog frog, final StateChange change) {
         if (null == frog) return;
         frog.setDead(true);
-        if (frog.isFirst()) {
+        if (frog.isFirst()) change.setFrog1(frog); 
+        else change.setFrog2(frog);
+        onFrogDeath(frog.isFirst(), change);
+    }
+
+    private void onFrogDeath(final boolean first, final StateChange change) {
+        if (first) {
             int deaths = frog1deaths.incrementAndGet();
             change.setFrog1deaths(deaths);
             startDeathTimer(frog1DeathTimerActive, frog1DeathTimer);
-            if (frog2 != null) frog2.set(START_X2, START_Y);
         } else {
             int deaths = frog2deaths.incrementAndGet();
             change.setFrog2deaths(deaths);
             startDeathTimer(frog2DeathTimerActive, frog2DeathTimer);
-            frog1.set(START_X1, START_Y);
         }
-        change.setFrog1(frog1);
-        if (frog2 != null) change.setFrog2(frog2);
+        resetTimer();
+        change.setTime(roundTimer.get());
+    }
+
+    private void resetFrog1() {
+        frog1.set(START_X1, START_Y);
+        frog1reset = true;
+    }
+
+    private void resetFrog2() {
+        frog2.set(START_X2, START_Y);
+        frog2reset = true;
+    }
+
+    private void resetTimer() {
         roundTimer.set(Constants.GAME_TIME * 1000);
         roundTimerSync.set(roundTimer.get() - SYNC_MS);
-        change.setTime(roundTimer.get());
     }
 
     private void startDeathTimer(final AtomicBoolean active, final AtomicInteger deathTimer) {
@@ -241,6 +275,16 @@ public class Road {
                 if (y < FINISH) {
                     setDead(first ? frog2 : frog1, change);
                     setScores(first, Constants.FINISH_SCORE, change);
+                    // win condition in single player
+                    if (frog2 == null) {
+                        change.setFrog2deaths(frog2deaths.incrementAndGet());
+                        startDeathTimer(frog1DeathTimerActive, frog1DeathTimer);
+                        resetTimer();
+                        change.setTime(roundTimer.get());
+                        x = START_X1;
+                        y = START_Y;
+                        frog1reset = true;
+                    }
                 }
                 break;
             case DOWN:
@@ -268,30 +312,25 @@ public class Road {
     }
 
     private void setScores(final boolean first, final int score, final StateChange change) {
-        if (first) {
-            change.setFrog1scores(frog1scores.accumulateAndGet(score, Integer::sum));
-            if (frog2 == null) change.setFrog2deaths(FROG_LIVES);
-        } else change.setFrog2scores(frog2scores.accumulateAndGet(score, Integer::sum));
+        if (first) change.setFrog1scores(frog1scores.accumulateAndGet(score, Integer::sum));
+        else change.setFrog2scores(frog2scores.accumulateAndGet(score, Integer::sum));
     }
 
     private Frog getFrog(final boolean first) {
         return first ? frog1 : frog2;
     }
 
-    public synchronized Frog addFrog() {
-        boolean isFirst = frog1 == null;
-        Frog frog;
-        if (isFirst) {
-            frog1 = new Frog(true, START_X1, START_Y);
-            frog = frog1;
-        } else {
-            frog2 = new Frog(false, START_X2, START_Y);
-            frog = frog2;
-        }
-        return frog;
-    }
-
     public int getFrogDeaths(final boolean first) {
         return first ? frog1deaths.get() : frog2deaths.get();
+    }
+
+    public Frog addFirstFrog() {
+        frog1 = new Frog(true, START_X1, START_Y);
+        return frog1;
+    }
+    
+    public Frog addSecondFrog() {
+        frog2 = new Frog(false, START_X2, START_Y);
+        return frog2;
     }
 }

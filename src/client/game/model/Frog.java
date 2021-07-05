@@ -46,7 +46,7 @@ public class Frog extends Rectangle {
         set(x, y);
     }
 
-    private void set(final double x, final double y) {
+    public void set(final double x, final double y) {
         setTranslateX(x);
         setTranslateY(y);
     }

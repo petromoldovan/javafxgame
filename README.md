@@ -5,13 +5,15 @@ Requirements
 * Javafx SDK 16
 
 
-Setup IntelliJ
+Setup IntelliJ IDEA
 --------
 1. Set Java SDK version in File -> Project Structure -> Project
 ![add java sdk](docs/assets/1.png)
 
 2. Link project third party libraries in File -> Project Structure -> Modules -> Dependencies
 ![add third party libs](docs/assets/2.png)
+
+Then select `lib` folder in the root of the project.
 
 3. Configure server runner
 ![server config](docs/assets/3.png)

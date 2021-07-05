@@ -1,11 +1,6 @@
 package client.screen;
 
-import client.controller.DashboardController;
-import client.controller.HomeController;
-import client.controller.LoginController;
-import client.controller.RegistrationController;
-import client.controller.ScoresController;
-import client.controller.ServerConnectionController;
+import client.controller.*;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;

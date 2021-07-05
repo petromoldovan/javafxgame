@@ -1,15 +1,13 @@
 package client.game;
 
 import client.StartClient;
-import client.controller.GameController;
-import network.entity.LoginResponse;
 import client.game.model.Player;
-import network.entity.RegistrationResponse;
-import network.entity.Scores;
 import client.screen.AppScreen;
 import com.google.gson.Gson;
 import common.constants.ActionTypes;
 import javafx.application.Platform;
+import network.entity.*;
+import network.entity.enums.FrogMove;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -34,6 +32,7 @@ public class SocketManager {
     String roomID = null;
     String clientID = null;
     private Class<?> controller;
+    private volatile boolean isRunning = true;
 
     public void connect(String host, int port) throws IOException {
         try {
@@ -53,10 +52,21 @@ public class SocketManager {
         }
     }
 
-    public void readDataFromServer() {
-        boolean isRunning = true;
+    public synchronized boolean isRunning() {
+        return isRunning;
+    }
 
-        while(isRunning) {
+    public synchronized void start() {
+        isRunning = true;
+    }
+    
+    public synchronized void stop() {
+        isRunning = false;
+    }
+
+    public void readDataFromServer() {
+
+        while(isRunning()) {
             try {
                 String messageFromServer = dataInputStream.readUTF();
 
@@ -82,6 +92,15 @@ public class SocketManager {
                     case REGISTER_USER:
                         onRegisterUser(messageFromServer);
                         break;
+                    case GAME_EVENT_WIN:
+                        onWinEvent(messageFromServer);
+                        break;
+                    case GAME_EVENT_LOSE:
+                        onLoseEvent();
+                        break;
+                    case GAME_EVENT_TIMEOUT:
+                        onTimeoutEvent();
+                        break;
                     case INVALID:
                         System.out.println("ERROR: invalid type " + type);
                         break;
@@ -92,6 +111,18 @@ public class SocketManager {
                 e.printStackTrace();
             }
         }
+    }
+
+    private void onTimeoutEvent() {
+        StartClient.getGameController().onTimeout();
+    }
+
+    private void onLoseEvent() {
+        StartClient.getGameController().onLoseEvent();
+    }
+
+    private void onWinEvent(final String message) {
+        StartClient.getGameController().onWinEvent();
     }
 
     private void onRegisterUser(final String message) {
@@ -111,6 +142,17 @@ public class SocketManager {
         }
         System.out.println("response " + type + " " + json);
         return result;
+    }
+    
+    private <T> T getResponse(final String message, final Class<T> aClass) {
+        final String json = getJson(message);
+        try {
+            return gson.fromJson(json, aClass);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            System.err.printf("Error parsing json [%s] to a class [%s]\n", json, aClass);
+            throw new RuntimeException(t);
+        }
     }
 
     private String getJson(final String message) {
@@ -141,8 +183,14 @@ public class SocketManager {
         sendDataToServer(payload);
     }
 
-    public void updateGamePosition(int x, int y) {
-        sendDataToServer(ActionTypes.ActionType.UPDATE_GAME_POSITION_REQUEST.name() + ";" + this.roomID + ";" + x + ";" + y);
+//    public void updateGamePosition(int x, int y) {
+//        sendDataToServer(ActionTypes.ActionType.UPDATE_GAME_POSITION_REQUEST.name() + ";" + this.roomID + ";" + x + ";" + y);
+//    }
+    
+    public void frogMove(FrogMove move) {
+        FrogMovementRequest request = new FrogMovementRequest(roomID, move);
+        String json = gson.toJson(request);
+        sendDataToServer(ActionTypes.ActionType.UPDATE_GAME_POSITION_REQUEST.name() + ";" + json);
     }
 
     public void resetGamePosition() {
@@ -195,25 +243,25 @@ public class SocketManager {
             Platform.runLater(() -> {
                 try {
                     // initialize the game
-                    StartClient.gameScreenController.show();
+                    StartClient.getGameController().show();
                     Player p1 = new Player(splitted[3], splitted[4]);
-                    GameController.setPlayer1(p1);
+                    StartClient.getGameController().setPlayer1(p1);
                     String p2ID = splitted[5];
                     if (!p2ID.equals("")) {
                         System.out.println("setting second player...");
                         Player p2 = new Player(splitted[5], splitted[6]);
-                        GameController.setPlayer2(p2);
+                        StartClient.getGameController().setPlayer2(p2);
                     }
                     // set the frog that is controlled by the current client
                     if (p1.getID().equals(this.clientID)) {
-                        System.out.println("I AM THE FIRST CLIUENT!");
-                        GameController.isControllingFirstFrog(true);
+                        System.out.println("I AM THE FIRST CLIENT!");
+                        StartClient.getGameController().isControllingFirstFrog(true);
                     } else {
-                        System.out.println("I AM THE FIRST SECOND CLEINT!");
+                        System.out.println("I AM THE SECOND CLIENT!");
                         // user is controlling the second frog
-                        GameController.isControllingFirstFrog(false);
+                        StartClient.getGameController().isControllingFirstFrog(false);
                     }
-                    GameController.startGame();
+                    StartClient.getGameController().startGame();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -223,34 +271,38 @@ public class SocketManager {
         }
     }
 
-    private String onCurrentGameDataResponse(String message) {
-        String[] splitted = message.split(";");
-        int timeLeft = Integer.parseInt(splitted[6]);
-
-        String player2ID = splitted[4];
-//        System.out.println("got data " + message);
-        Platform.runLater(
-                () -> {
-                    try {
-                        GameController.setTimeLeft(timeLeft);
-                        // set player position
-                        GameController.setX1(splitted[7]);
-                        GameController.setY1(splitted[8]);
-
-                        // add second player
-                        if (!player2ID.equals("")) {
-                            GameController.setX2(splitted[9]);
-                            GameController.setY2(splitted[10]);
-                        }
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-        );
-
-        return message;
+    private void onCurrentGameDataResponse(String message) {
+        StateChange change = getResponse(message, StateChange.class);
+        Platform.runLater(() -> StartClient.getGameController().onChangeState(change));
     }
+//    private String onCurrentGameDataResponse(String message) {
+//        String[] splitted = message.split(";");
+//        int timeLeft = Integer.parseInt(splitted[6]);
+//
+//        String player2ID = splitted[4];
+////        System.out.println("got data " + message);
+//        Platform.runLater(
+//                () -> {
+//                    try {
+//                        StartClient.getGameController().setTimeLeft(timeLeft);
+//                        // set player position
+//                        StartClient.getGameController().setX1(splitted[7]);
+//                        StartClient.getGameController().setY1(splitted[8]);
+//
+//                        // addCar second player
+//                        if (!player2ID.equals("")) {
+//                            StartClient.getGameController().setX2(splitted[9]);
+//                            StartClient.getGameController().setY2(splitted[10]);
+//                        }
+//
+//                    } catch (Exception e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//        );
+//
+//        return message;
+//    }
 
     public void showScores(RunnableWithResult<Scores> runnable) {
         sendRequest(runnable, ActionTypes.ActionType.SCORES);

@@ -3,6 +3,8 @@ package client.controller;
 import client.StartClient;
 import client.screen.AppScreen;
 import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -14,8 +16,18 @@ public class DashboardController {
     
     @FXML
     public Button multiplayerBtn;
+    
+    @FXML
+    public Button scores;
 
-    public void showProfile(ActionEvent actionEvent) {
+    private BooleanProperty disable;
+    
+    @FXML
+    public void initialize() {
+        disable = new SimpleBooleanProperty(false);
+        disable.bindBidirectional(singleplayerBtn.disableProperty());
+        disable.bindBidirectional(multiplayerBtn.disableProperty());
+        disable.bindBidirectional(scores.disableProperty());
     }
 
     public void startSinglegame(ActionEvent actionEvent) {
@@ -23,9 +35,8 @@ public class DashboardController {
     }
 
     public void startMultiplayer(ActionEvent actionEvent) {
-        singleplayerBtn.setDisable(true);
         multiplayerBtn.setText("waiting for opponent");
-        multiplayerBtn.setDisable(true);
+        disable.setValue(true);
         StartClient.getSocketManager().findMatch();
     }
     

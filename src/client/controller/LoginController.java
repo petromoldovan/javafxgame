@@ -2,7 +2,6 @@ package client.controller;
 
 import client.StartClient;
 import client.logic.Client;
-import network.entity.LoginResponse;
 import client.screen.AppScreen;
 import client.utils.Run;
 import javafx.application.Platform;
@@ -12,6 +11,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import network.entity.LoginResponse;
 
 public class LoginController {
 

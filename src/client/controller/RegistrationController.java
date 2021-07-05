@@ -2,8 +2,6 @@ package client.controller;
 
 import client.StartClient;
 import client.logic.Client;
-import network.entity.LoginResponse;
-import network.entity.RegistrationResponse;
 import client.screen.AppScreen;
 import client.utils.Run;
 import javafx.application.Platform;
@@ -11,6 +9,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
+import network.entity.LoginResponse;
+import network.entity.RegistrationResponse;
 
 public class RegistrationController {
 

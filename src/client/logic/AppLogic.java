@@ -1,9 +1,9 @@
 package client.logic;
 
-import network.entity.LoginResponse;
 import common.constants.ActionTypes;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
+import network.entity.LoginResponse;
 
 public class AppLogic {
 

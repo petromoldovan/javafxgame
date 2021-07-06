@@ -20,6 +20,7 @@ public class ScoresController {
         table.getColumns().add(getPosColumn());
         table.getColumns().add(getUserColumn());
         table.getColumns().add(getScoreColumn());
+        table.getItems().clear();
         
         StartClient.getSocketManager().showScores(scores -> 
                 Platform.runLater(() -> 
@@ -32,13 +33,15 @@ public class ScoresController {
         TableColumn<Score, String> column  = new TableColumn<>("Score");
         column.setCellValueFactory(c -> new SimpleStringProperty(String.valueOf(c.getValue().getScore())));
         column.setSortable(false);
+        column.setPrefWidth(100);
         return column;
     }
     
     private TableColumn<Score, String> getPosColumn() {
-        TableColumn<Score, String> column  = new TableColumn<>("Position");
+        TableColumn<Score, String> column  = new TableColumn<>("Rank");
         column.setCellValueFactory(c -> new SimpleStringProperty(String.valueOf(c.getValue().getPos())));
         column.setSortable(false);
+        column.setPrefWidth(50);
         return column;
     }
 
@@ -46,6 +49,7 @@ public class ScoresController {
         TableColumn<Score, String> column  = new TableColumn<>("Username");
         column.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getUser()));
         column.setSortable(false);
+        column.setPrefWidth(400);
         return column;
     }
 

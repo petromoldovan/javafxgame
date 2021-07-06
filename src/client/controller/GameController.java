@@ -19,14 +19,12 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
@@ -43,6 +41,7 @@ import static common.constants.Constants.*;
 
 public class GameController {
 
+    private static boolean firstFrog;
     private Stage stage;
     private final Frog[] frogs = new Frog[] {null, null};
     private final Map<Integer, Car> carMap = new HashMap<>();
@@ -59,7 +58,8 @@ public class GameController {
     }
     public static void setPlayer2(Player p) {
     }
-    public static void isControllingFirstFrog(boolean b) {
+    public static void isControllingFirstFrog(boolean firstFrog) {
+        GameController.firstFrog = firstFrog;
     }
 
     public void onChangeState(final StateChange change) {
@@ -73,8 +73,14 @@ public class GameController {
     }
 
     private void onChange(final StateChange change) {
-        updateFrog(change.getFrog1(), change);
-        updateFrog(change.getFrog2(), change);
+        updateFrog(change.getFrog1());
+        updateFrog(change.getFrog2());
+        if (change.hasFrog1Deaths()) {
+            onFrogDeath(true, change);
+        }
+        if (change.hasFrog2Deaths()) {
+            onFrogDeath(false, change);
+        }
         List<Car> list = new ArrayList<>(20);
         change.getCars().forEach(each -> {
             final int id = each.getId();
@@ -99,16 +105,16 @@ public class GameController {
         });
         root.getChildren().removeAll(list);
         if (change.hasTime()) setTimeLeft((double) change.getTime() / (GAME_TIME * 1000));
-//        if (change.hasFrog1Scores()) {
-//            frog1score.setValue(change.getFrog1scores());
-//            showMessage(String.format("YOUR SCORE: %d", change.getFrog1scores()));
-//        } else if (change.hasFrog2Scores()) {
-//            frog2score.setValue(change.getFrog2scores());
-//            showMessage(String.format("YOUR SCORE: %d", change.getFrog2scores()));
-//        }
+        if (change.hasFrog1Scores()) {
+            frog1score.setValue(change.getFrog1scores());
+            if (firstFrog && change.getFrog2deaths() < FROG_LIVES) showMessage("WELL DONE!");
+        } else if (change.hasFrog2Scores()) {
+            frog2score.setValue(change.getFrog2scores());
+            if (!firstFrog && change.getFrog1deaths() < FROG_LIVES) showMessage("WELL DONE!");
+        }
     }
 
-    private void updateFrog(network.model.Frog newFrog, StateChange change) {
+    private void updateFrog(network.model.Frog newFrog) {
         if (null == newFrog) return;
         int i = newFrog.isFirst() ? 0 : 1;
         final double x = newFrog.getX();
@@ -119,34 +125,40 @@ public class GameController {
             frogs[i] = frog;
             root.getChildren().add(frog);
             frog.reset(x, y);
+            rightLives.setVisible(frogs[1] != null);
         } else {
             if (newFrog.isDead()) {
-                frog.move(x, y);
+                frog.set(x, y);
                 frog.setDead();
-                onFrogDeath(newFrog, change);
             } else {
                 if (frog.isDead()) {
                     frog.setAlive();
                     frog.reset(x, y);
                 } else {
-                    frog.move(x, y);
-                    moving = true;
-                    new Timer().schedule(new TimerTask() {
-                        @Override
-                        public void run() {
-                            moving = false;
-                        }
-                    }, Constants.FROG_MOVE_TIME);
+                    if (newFrog.isReset()) {
+                        frog.reset(x, y);
+                    } else {
+                        frog.move(x, y);
+                    }
+                    if (newFrog.isFirst() == firstFrog) {
+                        moving = true;
+                        new Timer().schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                                moving = false;
+                            }
+                        }, Constants.FROG_MOVE_TIME);
+                    }
                 }
             }
         }
     }
 
-    private void onFrogDeath(final network.model.Frog each, final StateChange change) {
+    private void onFrogDeath(final boolean first, final StateChange change) {
         HBox hBox;
         int index;
         boolean tryAgain;
-        if (each.isFirst()) {
+        if (first) {
             hBox = leftLives;
             int deaths = change.getFrog1deaths();
             index = Constants.FROG_LIVES - deaths;
@@ -159,7 +171,9 @@ public class GameController {
         }
         hBox.getChildren().remove(index);
         hBox.getChildren().add(index, newEmptyLive());
-        if (tryAgain) showMessage("TRY AGAIN!");
+        if (tryAgain) {
+            if (firstFrog == first) showMessage("TRY AGAIN!");
+        }
     }
 
     private Node newEmptyLive() {
@@ -188,7 +202,7 @@ public class GameController {
         stage = new Stage();
         stage.setScene(scene);
         stage.show();
-        AppScreen.hide();
+        AppScreen.show(stage);
     }
     
     private Parent createContent() {
@@ -222,9 +236,9 @@ public class GameController {
         pane.setPrefWidth(WIDTH);
         pane.setPadding(new Insets(10));
         final BorderPane node = new BorderPane();
-        node.setLeft(scores1);
+        //node.setLeft(scores1);
         node.setCenter(time);
-        node.setRight(scores2);
+        //node.setRight(scores2);
         pane.setCenter(node);
 
         leftLives = new HBox(newLives("/client/resources/assets/live.png"));
@@ -251,8 +265,54 @@ public class GameController {
     }
 
     public void showGameOverMessage(boolean win) {
-        String message = win ? "YOU WIN!" : "YOU LOSE!";
-        showMessage(message);
+        Platform.runLater(() -> {
+            AnchorPane pane = new AnchorPane();
+            pane.getStylesheets().add(ASSETS + "/main.css");
+            pane.setPrefWidth(WIDTH);
+            pane.setPrefHeight(HEIGHT);
+            pane.setLayoutX( (WIDTH - 600) / 2d);
+            pane.setLayoutY( (HEIGHT - 350) / 2d);
+            DropShadow shadow = new DropShadow(30, Color.GREY);
+            shadow.setOffsetX(-15.0);
+            shadow.setOffsetY(15.0);
+            pane.setEffect(shadow);
+            
+            Label label = new Label(win ? "YOU WIN!" : "YOU LOSE!");
+            label.setStyle("-fx-font-size:48px");
+            label.setLayoutX(200);
+            label.setLayoutY(52);
+
+
+            String bg = win ? ASSETS + "/winner.png" : ASSETS + "/loser.png";
+//            final Parent gameOver = AppScreen.GAME_OVER.getParent();
+            Rectangle rect = new Rectangle(600, 350);
+            rect.setFill(new ImagePattern(new Image(bg)));
+            
+//            Button playAgain = new Button("Play again");
+//            playAgain.setMaxWidth(Double.MAX_VALUE);
+//            playAgain.setOnAction(e -> {
+//                stage.hide();
+//                AppScreen.DASHBOARD.goFrom(GameController.class);
+//            });
+//            Button scores = new Button("Scores");
+//            scores.setMaxWidth(Double.MAX_VALUE);
+//            scores.setOnAction(e -> AppScreen.SCORES.goFrom(GameController.class));
+            Button exit = new Button("Exit");
+            exit.setMaxWidth(Double.MAX_VALUE);
+            exit.setOnAction(e -> Platform.exit());
+            exit.setPrefWidth(150);
+            
+//            VBox vBox = new VBox(playAgain, scores, exit);
+            VBox vBox = new VBox(exit);
+            vBox.setLayoutX(400);
+            vBox.setLayoutY(255);
+            vBox.setFillWidth(true);
+            vBox.setSpacing(20);
+
+            pane.getChildren().addAll(rect, vBox, label);
+            
+            root.getChildren().add(pane);
+        });
     }
     
     public void showMessage(String message) {

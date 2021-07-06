@@ -159,18 +159,6 @@ public class Client implements Runnable {
         }
     }
 
-//    private void onUpdateGamePositionRequest(String message) {
-//        String[] splitted = message.split(";");
-//        String roomID = splitted[1];
-//
-//        Room room = StartServer.roomManager.findRoomByID(roomID);
-//        if (room == null) {
-//            System.out.println("onUpdateGamePositionRequest#no room with id " + roomID);
-//            return;
-//        }
-//        System.out.printf("update game position, client [%s] room: [%s] x=%s y=%s\n", clientID, roomID, splitted[2], splitted[3]);
-//        room.updateClientPosition(clientID, splitted[2], splitted[3]);
-//    }
     private void onUpdateGamePositionRequest(String message) {
         String[] s = message.split(";");
         if (s.length < 2) {
@@ -188,31 +176,7 @@ public class Client implements Runnable {
 //        System.out.printf("move=%s client [%s] room: [%s] \n", request.getMove(), clientID, roomId);
         room.updateClientPosition(clientID, request.getMove());
     }
-
-    private void onResetGamePositionRequest(String message) {
-        String[] splitted = message.split(";");
-        String roomID = splitted[1];
-
-        Room room = StartServer.roomManager.findRoomByID(roomID);
-        if (room == null) {
-            System.out.println("onResetGamePositionRequest#no room with id " + roomID);
-            return;
-        }
-        room.resetClientPosition(clientID);
-    }
-
-    private void onGameTimeoutRequest(String message) {
-        String[] splitted = message.split(";");
-        String roomID = splitted[1];
-
-        Room room = StartServer.roomManager.findRoomByID(roomID);
-        if (room == null) {
-            // room could be already deleted
-            return;
-        }
-        room.onTimeoutEvent();
-    }
-
+    
     private void onStartSingleMatch() {
         this.isLookingForMatch = false;
 

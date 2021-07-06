@@ -131,12 +131,6 @@ public class Room {
         engine.updatePlayer(isFirst, move);
     }
 
-    private void onWin(final boolean first) {
-        final Client winner = first ? c1 : c2;
-        final Client loser = first ? c2 : c1;
-        onWin(first, winner, loser);
-    }
-
     public void resetClientPosition(String clientID) {
         if (isFirstPlayer(clientID)) {
             c1Position = new Position(c1StartPositionX, c1StartPositionY);
@@ -148,12 +142,6 @@ public class Room {
     private void gameOver() {
         stopGame();
         RoomManager.deleteRoomByID(id);
-    }
-
-    public void onTimeoutEvent() {
-        for (Client c : participants) {
-            c.onTimeout();
-        }
     }
 
     private boolean isFirstPlayer(final String clientID) {
